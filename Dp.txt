@@ -1,0 +1,4 @@
+cf edu 95 C
+cf edu 80 D
+cf 613 div2 D
+cf 620 div2 C

@@ -1,0 +1,58 @@
+\documentclass[UTF8]{ctexart}
+\usepackage[fleqn]{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{comment}
+\usepackage{amsmath,amssymb}
+\usepackage{cite}
+\usepackage{fullpage}
+\usepackage{fancyvrb}
+\begin{document}
+\title{最大公约数之和V3}
+\date{\today}
+\author{WinnieVenice}
+\maketitle
+\noindent\textbf{题源:}51nod1237,4.07GzhuWeekPratice
+\\\textbf{题目:}
+\\\indent给定$n\in N^+,n\in[1,10^{10}]$,求$\sum\limits_{i=1}^n\sum\limits_{j=1}^n gcd(i,j) \% (7+10^9)$的值。
+\\\textbf{题解:}
+\\\indent显然不能暴力,因为$n\in[1,10^{10}]$。
+\\显然要化简式子,减少复杂度。
+\\\indent\textbf{我们看到$\sum_{i=1}^n gcd(i,j)$类似的式子就自然联想到欧拉函数$\psi(x)=\sum_{i=1}^x=\sum_{i=1}^x [gcd(i,n)==1]$} 
+\\$\sum\limits_{i=1}^n\sum\limits_{j=1}^n gcd(i,j)=\sum\limits_{i=1}^n\sum\limits_{j=1}^n d*[gcd(i,j)==d]$ ,[bool]=0/1 
+\\$\Rightarrow\sum\limits_{d=1}^n\sum\limits_{i=1}^n\sum\limits_{j=1}^n d*[gcd(i,j)==d]$
+\\$\Rightarrow\sum\limits_{d=1}^n d*\sum\limits_{i=1}^n\sum\limits_{j=1}^n [gcd(i,j)==d]$
+\\$\Rightarrow\sum\limits_{d=1}^n d*\sum\limits_{\lfloor\frac{i}{d}\rfloor=1}^{\lfloor\frac{n}{d}\rfloor}\sum\limits_{\lfloor\frac{j}{d}\rfloor=1}^{\lfloor\frac{n}{d}\rfloor} [gcd(\lfloor\frac{i}{d}\rfloor,\lfloor\frac{j}{d}\rfloor)==1]$
+\\$\Rightarrow\sum\limits_{d=1}^n d*\sum\limits_{i=1}^{\lfloor\frac{n}{d}\rfloor}\sum\limits_{j=1}^{\lfloor\frac{n}{d}\rfloor}[gcd(i,j)==1]$
+\\\textbf{$\because$ 对于具有“对称性”的函数,即:$f(x,y):D(f)\rightarrow R(f),\forall i,j\in D(f),f(i,j)==f(j,i)$。}
+\\\indent例如:gcd(i,j)=gcd(j,i)
+\\$\therefore \sum\limits_{i=1}^n\sum\limits_{j=1}^n f(i,j) \Leftrightarrow 2*\sum\limits_{i=1}^n\sum\limits_{j=1}^i f(i,j)-\sum_{i=1}^n f(i,i)$
+\\又$\because\forall i\in N^+\&\&i>1,[gcd(i,i)==1]\equiv0$。$i=1,[gcd(i,i)==1]\equiv1$
+\\$\Rightarrow\sum\limits_{d=1}^n d*(2*\sum\limits_{i=1}^{\lfloor\frac{n}{d}\rfloor}\sum\limits_{j=1}^i [gcd(i,j)==1]-1)$
+\\$\because \sum_{j=1}^i [gcd(i,j)==1]=\psi(i)$
+\\$\therefore\sum\limits_{d=1}^n d*(2*\sum\limits_{i=1}^{\lfloor\frac{n}{d}\rfloor}\psi(i)-1)$
+\\$\Rightarrow 2*\sum\limits_{d=1}^n d*\sum\limits_{i=1}^{\lfloor\frac{n}{d}\rfloor}\psi(i)-\sum\limits_{d=1}^n d$
+\\$\Rightarrow 2*\sum\limits_{d=1}^n d*\sum\limits_{i=1}^{\lfloor\frac{n}{d}\rfloor}\psi(i)-\frac{n*(n+1)}{2}$
+\\\indent\textbf{由已知知识，我们可以用欧拉筛在$\Theta$(n)时间复杂度下筛出[1,n]的$\psi$，并求出前缀和，但是因为n$\in[1,10^{10}]$我们最多预处理一部分}
+\\下面考虑如何更快的求$S(n)=\sum\limits_{i=1}^n \psi(i)$,\textbf{杜教筛(莫比乌斯反演也可以)经典例题:}
+\\\indent根据欧拉函数的性质:$n=\sum\limits_{d|n} \psi(d)$
+\\$\Leftrightarrow f(x)=x=\sum\limits_{d|x} \psi(d)$
+\\$\sum\limits_{i=1}^n f(i)=\sum\limits_{i=1}^n\sum\limits_{d|i} \psi(d)=\sum\limits_{i=1}^n\sum\limits_{d|i}\psi(i)$
+\\$\Rightarrow 0=\sum\limits_{i=1}^n f(i)-\sum\limits_{i=2}^n\sum\limits_{d|i}\psi(i)$
+\\\indent$=\sum\limits_{i=1}^n f(i)-\sum\limits_{i=2}^n\sum\limits_{d=1}^n [d|i]*\psi(i)$
+\\\indent$=\sum\limits_{i=1}^n f(i)-\sum\limits_{d=1}^n\sum\limits_{i=1}^n [d|i]*\psi(i)$
+\\\indent$\because \forall x\in[1,n],x=d*\lambda\Leftrightarrow[d|x]\equiv1$
+\\\indent$\therefore \sum\limits_{i=1}^n [d|i]\Leftrightarrow\sum\limits_{\frac{i}{d}}^{\lfloor\frac{n}{d}\rfloor} [1|\frac{i}{d}]\Leftrightarrow\sum\limits_{i=1}^{\lfloor\frac{n}{d}\rfloor}1$
+\\$\Rightarrow 0=\sum_{i=1}^n f(i)-\sum\limits_{d=1}^n\sum\limits_{i=1}^{\lfloor\frac{n}{d}\rfloor}\psi(i)$
+\\$\Rightarrow S(n)=\frac{n*(n+1)}{2}-\sum\limits_{d=2}^n S(\lfloor\frac{n}{d}\rfloor)$
+\\化简到这一步，我们得到了一个递归方程,显然我们可以用\textbf{整除分块}在$\Theta(n^{\frac{2}{3}}+\sqrt{n}$)的时间复杂度完成。
+\\\textbf{最终我们得到的解决方法:}
+\\$\sum_{i=1}^n\sum_{j=1}^n gcd(i,j)$
+\\$\Leftrightarrow 2*\sum\limits_{1\leq l\leq r\leq n,\frac{n}{l}=\frac{n}{r}\neq\frac{n}{r+1}}\frac{(r-l+1)*(r+l)}{2}*S(\lfloor\frac{n}{l}\rfloor)-\frac{n*(n+1)}{2}$ \&\& $S(n)=\sum\limits_{2\leq l\leq r\leq n,\frac{n}{l}=\frac{n}{r}\neq\frac{n}{r+1}} (r-l+1)*S(\lfloor\frac{n}{l}\rfloor)$
+\\\textbf{总时间复杂度:}$\Theta(n^{\frac{2}{3}}+\sqrt{n}+\theta($预处理一部分))
+\end{document}

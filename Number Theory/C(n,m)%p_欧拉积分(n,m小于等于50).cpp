@@ -1,0 +1,1 @@
+ll C(ll n,ll m){return (ll)round(tgamma(n+1)/tgamma(m+1)/tgamma(n-m+1));}

@@ -1,0 +1,1 @@
+// for (a/b)%c , if b|a ,then (a/b)%c=a%(b*c)/b

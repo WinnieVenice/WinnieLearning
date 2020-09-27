@@ -19,6 +19,16 @@ class BigInt{
             v.clear();
             Sign=0;
             if(*s.begin()=='-') Sign=1,s.erase(s.begin());
+            while(*s.begin()=='0'&&s.length()>1) s.erase(s.begin());
+            reverse(s.begin(),s.end());
+            v=s;
+            len=(int)v.length();
+        }
+        inline BigInt(string s,bool sign){
+            v.clear();
+            Sign=sign;
+            if(*s.begin()=='-') Sign=1,s.erase(s.begin());
+            while(*s.begin()=='0'&&s.length()>1) s.erase(s.begin());
             reverse(s.begin(),s.end());
             v=s;
             len=(int)v.length();
@@ -115,20 +125,44 @@ class BigInt{
             reverse(s.begin(),s.end());
             return BigInt(s);
         }
-        friend void print(const BigInt &x){ for(int i=x.len-1;i>=0;i--) cout<<x.v[i];}
+        friend BigInt operator*(const BigInt &x,const BigInt &y){
+            int len=2*std::max(x.len,y.len);
+            string s(len,'0');             
+            for(int i=0;i<x.len;i++) 
+                for(int j=0;j<y.len;j++)
+                    s[i+j]='0'+(x.v[i]-'0')*(y.v[j]-'0'); 
+            for(int i=0;i<len;i++)
+                if(s[i]-'0'>=10){
+                    s[i+1]+=(s[i]-'0')/10;
+                    s[i]=(s[i]-'0')%10+'0';
+                }
+            reverse(s.begin(),s.end()); 
+            return BigInt(s,x.Sign||y.Sign);
+        }
+        friend BigInt operator%(const BigInt &x,const BigInt &p){
+            
+        }
+        friend BigInt qpow(const BigInt &x,const BigInt &y){
+            BigInt res(0);
+            while(b>0){
+                if(b%2==0){
+
+                }
+            }
+            return res;
+        }
+        friend void print(const BigInt &x){ if(x.Sign) cout<<'-'; for(int i=x.len-1;i>=0;i--) cout<<x.v[i];}
         friend ostream &operator<<(ostream &cout,const BigInt &x){ print(x); return cout;}
         friend istream &operator>>(istream &cin,BigInt &x){
-            x.v.clear();
-            cin>>x.v;
-            reverse(x.v.begin(),x.v.end());
-            x.len=(int)x.v.length();
+            string s; cin>>s;
+            x=BigInt(s);
             return cin;
         }
 };
 
 void solve(){
-    BigInt a,b,c,d; cin>>a>>b>>c>>d;
-    cout<<(a+b+c+d)<<'\n';
+    BigInt a,b; cin>>a>>b;
+    cout<<a*b<<'\n';
 }
 int main(){
     int T; cin>>T;

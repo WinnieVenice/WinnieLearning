@@ -52,13 +52,14 @@ class BigInt{
             for(;x;x/=10) v+=x%10+'0';
             len=(int)v.length();
         }
+        inline const BigInt operator-()const{ return BigInt(v,!Sign);}
         inline void operator=(const BigInt &x){
             v=x.v;
             len=x.len;
             Sign=x.Sign;
         }
         inline void operator=(const long long &x){ init(x);}
-        inline bool operator>(const BigInt &x){
+        inline bool operator>(const BigInt &x)const {
             if(x.Sign!=Sign) return Sign>x.Sign;
             if(Sign<0) return (*this<x);
             if(x.len!=len) return len>x.len;
@@ -66,7 +67,7 @@ class BigInt{
                 if(x.v[i]!=v[i]) return v[i]>x.v[i];
             return 0;
         }
-        inline bool operator<(const BigInt &x){
+        inline bool operator<(const BigInt &x)const {
             if(x.Sign!=Sign) return Sign<x.Sign;
             if(Sign<0) return (*this>x);
             if(x.len!=len) return len>x.len;
@@ -74,18 +75,18 @@ class BigInt{
                 if(x.v[i]!=v[i]) return v[i]<x.v[i];
             return 0;
         }
-        inline bool operator==(const BigInt &x){
+        inline bool operator==(const BigInt &x)const {
             if(x.Sign!=Sign) return 0;
             if(x.len!=len) return 0;
             for(int i=0;i<len;i++)
                 if(x.v[i]!=v[i]) return 0;
             return 1;
         }
-        friend BigInt max(BigInt x,BigInt y){
+        friend BigInt max(const BigInt &x,const BigInt &y){
             if(x>y) return x;
             else return y;   
         }
-        friend BigInt min(BigInt x,BigInt y){
+        friend BigInt min(const BigInt &x,BigInt &y){
             if(x<y) return x;
             else return y;
         }
@@ -110,16 +111,16 @@ class BigInt{
         }
         friend BigInt operator-(const BigInt &x,const BigInt &y){
             if(x.Sign!=y.Sign) return x+y;
-            string s;
             int len=std::min(x.len,y.len);
+            string s;
             int j=0;
             for(int i=0;i<len;i++){
                 if(x.v[i]-j>=y.v[i]) s+=x.v[i]-j-y.v[i]+'0',j=0;
-                else s+=10+x.v[i]-j-y.v[i]+'0',j++;
+                else s+=10+x.v[i]-j-y.v[i]+'0',j=1;
             }
             BigInt mx(max(x,y));
             for(int i=len;i<mx.len;i++){
-                s+=(mx.v[i]-'0'+j)%10+'0';
+                s+=(mx.v[i]-'0'-j)%10+'0';
                 j=(mx.v[i]-'0'+j)/10;
             }
             reverse(s.begin(),s.end());
@@ -127,28 +128,29 @@ class BigInt{
         }
         friend BigInt operator*(const BigInt &x,const BigInt &y){
             int len=2*std::max(x.len,y.len);
-            string s(len,'0');             
+            string s(len,(char)0);             
             for(int i=0;i<x.len;i++) 
                 for(int j=0;j<y.len;j++)
-                    s[i+j]='0'+(x.v[i]-'0')*(y.v[j]-'0'); 
-            for(int i=0;i<len;i++)
-                if(s[i]-'0'>=10){
-                    s[i+1]+=(s[i]-'0')/10;
-                    s[i]=(s[i]-'0')%10+'0';
+                    s[i+j]+=(char)0+(x.v[i]-'0')*(y.v[j]-'0'); 
+            for(int i=0;i<len;i++){
+                if(s[i]>=10){
+                    s[i+1]+=s[i]/10;
+                    s[i]=s[i]%10;
                 }
-            reverse(s.begin(),s.end()); 
-            return BigInt(s,x.Sign||y.Sign);
-        }
-        friend BigInt operator%(const BigInt &x,const BigInt &p){
-            
-        }
-        friend BigInt qpow(const BigInt &x,const BigInt &y){
-            BigInt res(0);
-            while(b>0){
-                if(b%2==0){
-
-                }
+                s[i]+='0';
             }
+            reverse(s.begin(),s.end()); 
+            return BigInt(s,x.Sign^y.Sign);
+        }
+        friend BigInt operator%(const BigInt &x,const long long &p){
+            long long res=0;
+            for(int i=0;i<x.len;i++) res=(res*10+x.v[i]-'0')%p;
+            return BigInt(res);
+        }
+        friend BigInt qpow(BigInt a,long long b){
+            BigInt res(1);
+            for(;b;b>>=1,a=a*a)
+                if(b&1) res=res*a;
             return res;
         }
         friend void print(const BigInt &x){ if(x.Sign) cout<<'-'; for(int i=x.len-1;i>=0;i--) cout<<x.v[i];}
@@ -159,12 +161,23 @@ class BigInt{
             return cin;
         }
 };
-
+const int N=5+1e2;
+BigInt f[N];
+ll a[N];
 void solve(){
-    BigInt a,b; cin>>a>>b;
-    cout<<a*b<<'\n';
+    BigInt n; cin>>n;
+    for(int i=1;i<100;i++)
+        if(f[i]>n||f[i]==n){
+            cout<<f[i]<<'\n';
+            return;
+        }       
+    cout<<"-1\n";
 }
 int main(){
+    
+    f[0]=2,f[1]=4;
+    for(int i=2;i<100;i++)
+        f[i]=4*f[i-1]-f[i-2];
     int T; cin>>T;
     while(T--) solve();
 }

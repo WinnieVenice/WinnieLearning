@@ -45,6 +45,11 @@ class BigInt{
             len=x.len;
             Sign=x.Sign;
         }
+        inline BigInt(const BigInt &x,bool sign){
+            v=x.v;
+            len=x.len;
+            Sign=x.Sign^sign;
+        }
         inline void init(long long x){
             v.clear();
             Sign=0;
@@ -91,7 +96,7 @@ class BigInt{
             else return y;
         }
         friend BigInt operator+(const BigInt &x,const BigInt &y){
-            if(x.Sign!=y.Sign) return x-y;
+            if(x.Sign!=y.Sign) return BigInt(x-(-y),x.Sign);
             string s;
             int len=std::min(x.len,y.len);
             int j=0;
@@ -107,10 +112,12 @@ class BigInt{
             }
             for(;j;j/=10) s+=j%10+'0';
             reverse(s.begin(),s.end());
-            return BigInt(s);
+            return BigInt(s,x.Sign);
         }
         friend BigInt operator-(const BigInt &x,const BigInt &y){
-            if(x.Sign!=y.Sign) return x+y;
+            if(x.Sign!=y.Sign) return BigInt(x+(-y),x.Sign);
+            //if(x<y) return BigInt((-y)-x,!y.Sign);
+            if(x<0&&y<0) return BigInt(x-y,1);
             int len=std::min(x.len,y.len);
             string s;
             int j=0;
@@ -161,23 +168,14 @@ class BigInt{
             return cin;
         }
 };
-const int N=5+1e2;
-BigInt f[N];
-ll a[N];
 void solve(){
-    BigInt n; cin>>n;
-    for(int i=1;i<100;i++)
-        if(f[i]>n||f[i]==n){
-            cout<<f[i]<<'\n';
-            return;
-        }       
-    cout<<"-1\n";
+    BigInt a,b; cin>>a>>b;
+    cout<<a+b<<'\n';
+    cout<<a-b<<'\n';
+    cout<<-a<<'\n';
+    cout<<-b<<'\n';
 }
 int main(){
-    
-    f[0]=2,f[1]=4;
-    for(int i=2;i<100;i++)
-        f[i]=4*f[i-1]-f[i-2];
     int T; cin>>T;
     while(T--) solve();
 }

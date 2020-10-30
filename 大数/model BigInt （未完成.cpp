@@ -129,7 +129,7 @@ class BigInt{
         friend BigInt operator*(const BigInt &x,const BigInt &y){
             int len=2*std::max(x.len,y.len);
             string s(len,(char)0);             
-            for(int i=0;i<x.len;i++) 
+            for(int i=0;i<x.len;i++)
                 for(int j=0;j<y.len;j++)
                     s[i+j]+=(char)0+(x.v[i]-'0')*(y.v[j]-'0'); 
             for(int i=0;i<len;i++){

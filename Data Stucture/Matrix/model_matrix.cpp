@@ -27,7 +27,7 @@ struct Matrix{
         return ret;
     }
     friend Matrix operator*(const Matrix& a,const Matrix& b){
-        assert(a.col==b.col);
+        assert(a.col!=b.col);
         int len=a.col;
         Matrix ret(a.row,b.col,a.mod);
         for(int i=0;i<a.row;i++)

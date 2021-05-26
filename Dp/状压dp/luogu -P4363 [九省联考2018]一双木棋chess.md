@@ -33,6 +33,6 @@ $$
 \\&或者因为是倒着的三角形,所以我们可以考虑用轮廓线进行状压(插头dp)
 \\&即:对于竖着的每一段我们用二进制里的1表示,横着的每一段用0表示,那么每个局面就是一个n+m位的二进制数.那么初始状态就是(1<<n)-1\Big(\begin{matrix}\underbrace{0\dots0}\\m\end{matrix}\begin{matrix}\underbrace{1\dots1}\\n\end{matrix}\Big),最终状态就是(1<<m)-1)<<n\Big(\begin{matrix}\underbrace{1\dots1}\\m\end{matrix}\begin{matrix}\underbrace{0\dots0}\\n\end{matrix}\Big)
 \\&想一下如何进行状态转移,不难从第一步落子归纳出,每落一个子,在二进制上就是01\rightarrow10,那么就可以:next\_state=now\_state\oplus(3<<i),这里我们枚举i
-\\\end{align
+\\\end{align}
 $$
 

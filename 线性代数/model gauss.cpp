@@ -7,7 +7,6 @@ int qpow(int a, int b, int p) {int ret = 1; for(a %= p; b; b >>= 1, a = a * a % 
 int qpow(int a,int b) {int ret = 1; for(; b; b >>= 1, a *= a) if(b & 1) ret *= a; return ret; }
 int gcd(int x,int y) {return y ? gcd(y, x % y) : x; }
 pair<int,int> exgcd(int a,int b) { if(!b) return {1, 0}; pair<int,int> ret = exgcd(b, a % b); return {ret.second, ret.first - a / b * ret.second }; }
-int lcm(int x,int y){ return x / gcd(x, y) * y; }
 namespace gauss {
     const int N = 5 + 1e2;
     const double eps = 1e-6;
@@ -144,23 +143,124 @@ namespace gauss {
         }   
         return 0;
     }
+    int mod = 998244353;
+    int det(int a[][N], int n, int m) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                a[i][j] = (a[i][j] % mod + mod) % mod;
+            }
+        }
+        int now_r = 0;
+        int sum = 1;
+        for (int i = 0; i < m && now_r < n; i++, now_r++) {
+            int mx = now_r;
+            for (int j = now_r + 1; j < n; j++) {
+                if (a[mx][i] < a[j][i]) {
+                    mx = j;
+                }
+            }
+            if (mx != now_r) {
+                for (int j = i; j < m; j++) {
+                    swap(a[mx][j], a[now_r][j]);
+                }
+                sum *= -1;
+            }
+            if (!a[now_r][i]) {
+                now_r--;
+                continue;
+            }
+            for (int j = now_r + 1; j < n; j++) {
+                if (!a[j][i]) continue;
+                int lcm = a[j][i] / __gcd(a[j][i], a[now_r][i]) * a[now_r][i];
+                int p = lcm / a[j][i], q = lcm / a[now_r][i];
+                for (int k = i; k < m; k++) {
+                    a[j][k] = (p * a[j][k] % mod - q * a[now_r][k] % mod) % mod;
+                    a[j][k] = a[j][k] * qpow(p, mod - 2, mod) % mod;
+                    if (a[j][k] < 0) {
+                        a[j][k] += mod;
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            sum = sum * a[i][i] % mod;
+        }
+        return (sum % mod + mod) % mod;
+    }
+    int det(vector<vector<int>> &a) {
+        int n = a.size(), m = a[0].size(); //n == m, else det = 0
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                a[i][j] = (a[i][j] % mod + mod) % mod;
+            }
+        }
+        int now_r = 0;
+        int sum = 1;
+        for (int i = 0; i < m && now_r < n; i++, now_r++) {
+            int mx = now_r;
+            for (int j = now_r + 1; j < n; j++) {
+                if (a[mx][i] < a[j][i]) {
+                    mx = j;
+                }
+            }
+            if (mx != now_r) {
+                for (int j = now_r; j < m; j++) {
+                    swap(a[mx][j], a[now_r][j]);
+                }   
+                sum *= -1; 
+            }
+            if (!a[mx][i]) {
+                now_r--;
+                continue;
+            }
+            for (int j = now_r + 1; j < n; j++) {
+                if (!a[j][i]) {
+                    continue;
+                }
+                int lcm = a[j][i] / __gcd(a[j][i], a[mx][i]) * a[mx][i];
+                int p = lcm / a[j][i], q = lcm / a[mx][i];
+                for (int k = i; k < m; k++) {
+                    a[j][k] = (p * a[j][k] % mod- q * a[mx][k] % mod) % mod;
+                    a[j][k] = a[j][k] * qpow(p, mod - 2, mod) % mod;
+                    if (a[j][k] < 0) {
+                        a[j][k] += mod;
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            sum = sum * a[i][i] % mod;
+        }
+        return (sum + mod) % mod;
+    }
+}
+const int mod = 998244353;
+const int M = 5 + 2e6;
+int f[M];
+int C(int n, int m) {
+    return m > n ? 0 : f[n] * qpow(f[n - m] * f[m], mod - 2, mod) % mod;
 }
 const int N = 5 + 1e2;
-double a[N][N];
-
+int a[N][2];
+int e[N][N];
 signed main() {
-    int n; cin >> n;
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n + 1; j++) {
-            cin >> a[i][j];
-        }
+    f[0] = 1;
+    for (int i = 1; i < M; i++) {
+        f[i] = f[i - 1] * i % mod;
     }
-    int f = gauss :: gauss(a, n, n + 1);
-    if (f) {
-        puts("No Solution");
-    } else {
-        for (int i = 0; i < n; i++) {
-            cout << fixed << setprecision(2) << a[i][n] << endl;
+    int _; cin >> _;
+    while (_--) {
+        int n, m; cin >> n >> m;
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < 2; j++) {
+                cin >> a[i][j];
+            }
         }
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < m; j++) {
+                e[i][j] = a[j][1] < a[i][0] ? 0 : C(a[j][1] - a[i][0] + n - 1, n - 1);
+            } 
+        }
+        cout << gauss :: det(e, m, m) << endl;
     }
 }

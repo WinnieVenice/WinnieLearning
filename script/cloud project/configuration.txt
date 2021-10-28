@@ -1,0 +1,11 @@
+10
+10
+6
+1
+0
+150
+127.0.0.1:7555
+900
+D:\mumu\emulator\nemu\vmonitor\bin\adb_server.exe
+mumu: 127.0.0.1:7555
+xiaoyao:127.0.0.1:21503

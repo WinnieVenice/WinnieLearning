@@ -3,10 +3,13 @@
 ```c++
 #include<bits/stdc++.h>
 using namespace std;
-namespace Min25{
+namespace MIN25{
     const int N = 5 + 2e5;//2 * sqrt_n
     const long long mod = 7 + 1e9;
-    int sqrt_n;
+    bool np[N];
+    long long n;
+    int sqrt_n, m, tot, pri[N], id0[N], id1[N];
+    long long w[N];
     long long f(long long p, long long t) { // f(p ^ t)
         //...
     }
@@ -21,6 +24,7 @@ namespace Min25{
             }
         }
     }
+    
     int get_id(long long x) {
         if (x <= sqrt_n) return id0[x];
         else return id1[n / x];

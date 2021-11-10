@@ -27,11 +27,11 @@ $$
 \\\ 由于h(p) = 0, 故(*)式\Rightarrow F(n) = \sum_{d = 1, d \in PN}^n h(d)G(\lfloor\frac{n}{d}\rfloor), --(**)
 \\\ 这里的PN是指d中不包括某质数的一次项,不难知道这样的d只有\sqrt n个
 \\\ 考虑如何求(**): 考虑转移方程:当前已经算到x, 由于PN是不含一次项,所以可以枚举p,c>1,转移：x \rightarrow xp^c
-\\\ h(xp^c)=h(x)h(p^c),那么用筛法即可求解,故我们只需要考虑h(p^c)
+\\\ h(xp^c) =h(x)h(p^c),那么用筛法即可求解,故我们只需要考虑h(p^c)
 \\\ f(p^c) = \sum_{d | p^c} h(d)g(\lfloor\frac{p^c}{d}\rfloor)
 \\\ f(p^c) = h(p^c)g(1) + \sum_{d | p^{c - 1}} h(d)g(\lfloor\frac{p^c}{d}\rfloor)
-\\\ h(p^c) = \frac{f(p^c) - \sum_{d | p^{c - 1}} h(d)g(\lfloor\frac{p^c}{d}\rfloor)}{g(1)}
-\\\ 根据g的具体函数性质和各种筛法杜教筛和分块求出h(p^c)
+\\\ h(p^c) = \frac{f(p^c) - \sum_{d | p^{c - 1}} h(d)g(\lfloor\frac{p^c}{d}\rfloor)}{g(1)} = \frac{f(p^c) - \sum_{e = 1}^c h(p^{c - e})g(p^e)}{g(1)}
+\\\ 根据g的具体函数性质和各种筛法杜教筛和分块求出h(p^c)
 $$
 
 ## 相关复杂度证明
@@ -41,7 +41,110 @@ $$
 \\\ 显然\forall x \in PN, x = a^2b^3. 故这样的x有\int_{1}^{\sqrt n} \sqrt[3]\frac{n}{x^2}dx = \sqrt n
 $$
 
+## 预处理
+
+$$
+预处理筛至少要2 * \sqrt n + 1的空间
+$$
+
+
+
 ## 模板
+
+```c++
+#include<bits/stdc++.h>
+#define LL __int128
+#define endl '\n'
+#define int long long 
+using namespace std;
+typedef long long ll;
+typedef unsigned long long ull;
+ll gcd(ll x,ll y){return y?gcd(y,x%y):x;}
+ll lcm(ll x,ll y){return x/gcd(x,y)*y;}
+ll qpow(ll a,ll b,ll p){a%=p; ll ret=1;for(;b;b>>=1,a=a*a%p) if(b&1) ret=ret*a%p; return ret;}
+ll qpow(ll a,ll b){ll ret=1; for(;b;b>>=1,a*=a) if(b&1) ret*=a; return ret;}
+ll getInv(ll x,ll p){return qpow(x,p-2,p);}
+const int mod = 7 + 1e9;
+const int N = 5 + 2e6;
+bool np[N];
+int tot, pri[N];
+int phi[N];
+void seive(int n) {
+    np[1] = 1; phi[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        if (!np[i]) {
+            pri[++tot] = i;
+            phi[i] = i - 1;
+        }
+        for (int j = 1; j <= tot && i * pri[j] <= n; j++) {
+            np[i * pri[j]] = 1;
+            if (i % pri[j] == 0) {
+                phi[i * pri[j]] = phi[i] * pri[j] % mod; 
+                break;
+            }
+            phi[i * pri[j]] = phi[i] * (pri[j] - 1) % mod;
+        }
+    }
+    for (int i = 1; i <= n; i++) {
+        phi[i] += phi[i - 1]; phi[i] %= mod; 
+    }
+}
+int sh(int x) {
+    int y = x + 1;
+    if (x & 1)
+        y >>= 1;
+    else
+        x >>= 1;
+    return (x % mod) * (y % mod) % mod;//计算等差数列，注意这里的取模，非常的恶心，我调了两个小时，一定要分开取模之后再乘
+}
+unordered_map<int, int> s_p;
+int n, sqrt_n;
+int djs_phi(int x) {
+    if (x < sqrt_n) return phi[x];
+    if (s_p[x]) return s_p[x];
+    int res = sh(x);
+    for (int l = 2, r; l <= x; l = r + 1) {
+        int d = x / l; r = x / d;
+        res -= (r - l + 1) * djs_phi(d) % mod; res %= mod;
+    }
+    return s_p[x] = res;
+}
+int h[N][100];
+int ans = 0;
+void PN(int x, int v, int id) {
+    int d = n / x;
+    ans += djs_phi(d) * v % mod;
+    ans %= mod;
+    //if (id > 1 && x > n / pri[id] / pri[id]) return;
+    for (int i = id; i <= tot && pri[i] * pri[i] <= d; i++) {
+        //if (i > 1 && x > n / pri[i] / pri[i]) break;
+        int nx = x * pri[i];
+        for (int j = 1; nx <= n; j++, nx *= pri[i]) {
+            if (!h[i][j]) {
+                int F = pri[i] ^ j, G = pri[i] - 1;
+                for (int k = 1; k <= j; k++, G *= pri[i]) {
+                    F = (F - G % mod * h[i][j - k]) % mod;
+                }
+                h[i][j] = F;
+            }
+            if (h[i][j]) {
+                PN(nx, v * h[i][j] % mod, i + 1);
+            }
+        }
+    }
+}
+
+signed main(){
+    cin >> n; sqrt_n = 2 * sqrt(n) + 1;//至少要2 * sqrt(n)
+    seive(sqrt_n);
+    for (int i = 1; i <= tot; i++) h[i][0] = 1;
+    ans = 0;
+    PN(1, 1, 1);
+    cout << (ans + mod) % mod<< endl;
+}
+```
+
+
 
 ```c++
 #include<bits/stdc++.h>

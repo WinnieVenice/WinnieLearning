@@ -11,6 +11,7 @@ $$
 ## 做法
 
 $$
+\\实质上是用h和g取拟合f
 \\构造一个函数g,满足以下条件:\begin{cases}\ g是积性函数\\\ g(p) = f(p)\\\ G(n) = \sum_{i = 1}^n g(i) 能快速求 \end{cases}
 \\\ 那么f = h * g, 这里h也是积性函数.
 \\\begin{align}
@@ -31,8 +32,22 @@ $$
 \\\ f(p^c) = \sum_{d | p^c} h(d)g(\lfloor\frac{p^c}{d}\rfloor)
 \\\ f(p^c) = h(p^c)g(1) + \sum_{d | p^{c - 1}} h(d)g(\lfloor\frac{p^c}{d}\rfloor)
 \\\ h(p^c) = \frac{f(p^c) - \sum_{d | p^{c - 1}} h(d)g(\lfloor\frac{p^c}{d}\rfloor)}{g(1)} = \frac{f(p^c) - \sum_{e = 1}^c h(p^{c - e})g(p^e)}{g(1)}
-\\\ 根据g的具体函数性质和各种筛法杜教筛和分块求出h(p^c)
+\\\ 根据g的具体函数性质和各种筛法杜教筛和分块求出h(p^c)
 $$
+
+## 注意
+
+$$
+\\\begin{align}
+\\ &事实上h(p) = 0这个条件不一定满足
+\\ &就跟下面模板里的例题一样,f(p)=p-1+2*[p==2],通过h反迪利克雷卷积可以知道h(p)=2.
+\\ &但事实上这里的影响很少,因为根据上面的推导因为h(p)=0所以只有\sqrt{n}个地方有值
+\\ &因此多一个或几个,那数量级应该还是O(\sqrt{n})
+\\ &同时当我们观察到f的特殊点时也不需要对h特殊处理,因为h是通过f和g反卷出来的
+\\\end{align}
+$$
+
+
 
 ## 相关复杂度证明
 
@@ -52,6 +67,7 @@ $$
 ## 模板
 
 ```c++
+//loj 6053
 #include<bits/stdc++.h>
 #define LL __int128
 #define endl '\n'
@@ -120,7 +136,7 @@ void PN(int x, int v, int id) {
         //if (i > 1 && x > n / pri[i] / pri[i]) break;
         int nx = x * pri[i];
         for (int j = 1; nx <= n; j++, nx *= pri[i]) {
-            if (!h[i][j]) {
+            if (!h[i][j]) {	//默认h[i][j]==0表示没取,但事实上某些算过的点的值就为0,可以多开个标记数组来剪枝
                 int F = pri[i] ^ j, G = pri[i] - 1;
                 for (int k = 1; k <= j; k++, G *= pri[i]) {
                     F = (F - G % mod * h[i][j - k]) % mod;

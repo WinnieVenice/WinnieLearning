@@ -42,7 +42,17 @@ https://www.cnblogs.com/onglublog/p/15489967.html 数位dp
 
 CCPC长春
 
+## 概率与期望
+
+https://blog.csdn.net/consciousman/article/details/73730834
+
+https://www.136.la/nginx/show-144925.html
 
 
 
+## dp优化-矩阵快速幂
+
+https://blog.csdn.net/china_xyc/article/details/89819376
+
+https://blog.csdn.net/weixin_30698527/article/details/95141358
 

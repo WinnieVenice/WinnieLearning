@@ -56,3 +56,6 @@ https://blog.csdn.net/china_xyc/article/details/89819376
 
 https://blog.csdn.net/weixin_30698527/article/details/95141358
 
+## 启发式合并-dsu on tree
+
+https://www.cnblogs.com/zwfymqz/p/9683124.html

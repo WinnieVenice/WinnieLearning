@@ -66,3 +66,6 @@ https://ac.nowcoder.com/acm/contest/11181/B
 
 https://ac.nowcoder.com/acm/contest/11181/C
 
+## exgcd
+
+https://blog.csdn.net/zhjchengfeng5/article/details/7786595

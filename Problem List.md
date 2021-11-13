@@ -59,3 +59,10 @@ https://blog.csdn.net/weixin_30698527/article/details/95141358
 ## 启发式合并-dsu on tree
 
 https://www.cnblogs.com/zwfymqz/p/9683124.html
+
+## 区间覆盖最值问题
+
+https://ac.nowcoder.com/acm/contest/11181/B
+
+https://ac.nowcoder.com/acm/contest/11181/C
+

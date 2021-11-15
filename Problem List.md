@@ -60,6 +60,8 @@ https://blog.csdn.net/weixin_30698527/article/details/95141358
 
 https://www.cnblogs.com/zwfymqz/p/9683124.html
 
+https://www.luogu.com.cn/blog/codesonic/dsu-on-tree
+
 ## 区间覆盖最值问题
 
 https://ac.nowcoder.com/acm/contest/11181/B

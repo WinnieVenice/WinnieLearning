@@ -66,6 +66,8 @@ https://uoj.ac/problem/284
 
 https://codeforces.com/problemset/problem/741/D
 
+https://codeforces.com/problemset/problem/600/E
+
 ## 区间覆盖最值问题
 
 https://ac.nowcoder.com/acm/contest/11181/B

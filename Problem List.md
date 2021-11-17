@@ -101,3 +101,9 @@ https://www.cnblogs.com/cjyyb/p/9479258.html
 https://www.cnblogs.com/cjyyb/p/9464994.html
 
 https://www.luogu.com.cn/problem/P3565
+
+## 回滚莫队
+
+https://www.cnblogs.com/Parsnip/p/10969989.html
+
+https://oi-wiki.org/misc/rollback-mo-algo/

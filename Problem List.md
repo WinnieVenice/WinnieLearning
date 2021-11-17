@@ -78,3 +78,11 @@ https://ac.nowcoder.com/acm/problem/16122
 
 https://ac.nowcoder.com/acm/problem/16544
 
+## 快速阶乘
+
+https://blog.csdn.net/alexingcool/article/details/7998085
+
+
+
+
+

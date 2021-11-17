@@ -94,6 +94,77 @@ $$
 $$
 
 ```c++
-
+#include <bits/stdc++.h>
+#define int long long
+#define endl '\n'
+#define LL __int128
+using namespace std;
+int qpow(int a, int b, int p) {int ret = 1; for(a %= p; b; b >>= 1, a = a * a % p) if(b & 1) ret = ret * a % p; return ret; }
+int qpow(int a,int b) {int ret = 1; for(; b; b >>= 1, a *= a) if(b & 1) ret *= a; return ret; }
+int gcd(int x,int y) {return y ? gcd(y, x % y) : x; }
+pair<int,int> exgcd(int a,int b) { if(!b) return {1, 0}; pair<int,int> ret = exgcd(b, a % b); return {ret.second, ret.first - a / b * ret.second }; }
+int lcm(int x,int y){ return x / gcd(x, y) * y; }
+struct T {
+    int l, r, mx, sum;
+};
+const int N = 5 + 1e5;
+int n;
+int c[N];
+vector<int> G[N];
+int tot, rt[N];
+T st[1 << 21];
+void pb(int &x, int &l, int &r) { 
+    st[x].mx = max(st[l].mx, st[r].mx);
+    int res = 0;
+    if (st[x].mx == st[l].mx) res += st[l].sum;
+    if (st[x].mx == st[r].mx) res += st[r].sum;
+    st[x].sum = res;
+}
+void upd(int &x, int l, int r, int p) {
+    if (!x) x = ++tot;
+    if (l == r) {
+        st[x].mx++;
+        st[x].sum = l;
+        return;
+    }
+    int mid = l + r >> 1;
+    if (p <= mid) upd(st[x].l, l, mid, p);
+    else upd(st[x].r, mid + 1, r, p);
+    pb(x, st[x].l, st[x].r);    
+}
+int merge(int u, int v, int l, int r) {
+    if (!u || !v) return u + v;
+    if (l == r) {
+        st[u].mx = st[u].mx + st[v].mx;
+        return u;
+    }
+    int mid = l + r >> 1;
+    st[u].l = merge(st[u].l, st[v].l, l, mid); 
+    st[u].r = merge(st[u].r, st[v].r, mid + 1, r);
+    pb(u, st[u].l, st[u].r);
+    return u;
+}
+int ans[N];
+void dfs(int x, int f) {
+    for (auto v: G[x]) {
+        if (v != f) {
+            dfs(v, x);
+            rt[x] = merge(rt[x], rt[v], 1, n);
+        }
+    }
+    upd(rt[x], 1, n, c[x]);
+    ans[x] = st[rt[x]].sum;   
+}
+signed main() {
+    cin >> n;
+    for (int i = 1; i <= n; i++) cin >> c[i];
+    for (int i = 1; i < n; i++) {
+        int u, v; cin >> u >> v;
+        G[u].push_back(v); G[v].push_back(u);
+    }    
+    dfs(1, 0);
+    for (int i = 1; i <= n; i++) cout << ans[i] << ' ';
+    cout << endl;
+}
 ```
 

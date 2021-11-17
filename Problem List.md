@@ -86,5 +86,7 @@ https://blog.csdn.net/alexingcool/article/details/7998085
 
 
 
+## 贝尔(bell)数
 
+https://www.luogu.com.cn/problem/P5748
 

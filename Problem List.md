@@ -64,6 +64,8 @@ https://www.luogu.com.cn/blog/codesonic/dsu-on-tree
 
 https://uoj.ac/problem/284
 
+https://codeforces.com/problemset/problem/741/D
+
 ## 区间覆盖最值问题
 
 https://ac.nowcoder.com/acm/contest/11181/B
@@ -90,3 +92,10 @@ https://blog.csdn.net/alexingcool/article/details/7998085
 
 https://www.luogu.com.cn/problem/P5748
 
+## 长链剖分
+
+https://www.cnblogs.com/cjyyb/p/9479258.html
+
+https://www.cnblogs.com/cjyyb/p/9464994.html
+
+https://www.luogu.com.cn/problem/P3565

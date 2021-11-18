@@ -107,3 +107,7 @@ https://www.luogu.com.cn/problem/P3565
 https://www.cnblogs.com/Parsnip/p/10969989.html
 
 https://oi-wiki.org/misc/rollback-mo-algo/
+
+## dp
+
+https://vjudge.net/contest/465708#problem/G

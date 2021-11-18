@@ -1,4 +1,5 @@
 import java.awt.Container;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.DataInputStream;
@@ -7,6 +8,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Queue;
 import java.util.Scanner;
 
 import javax.swing.JButton;
@@ -14,6 +16,8 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
@@ -22,15 +26,18 @@ public class client {
     static String ip;
     static int port;
     static JFrame user_frame;
+    static JFrame login_frame;
     static String name;
+    static String pwd;
     static client _client;
     static Scanner in;
     static PrintWriter out;
+    static Queue<String> msg_queue;
     public static void main(String[] args) throws Exception {
         login_dialog();
     }
     private static void login_dialog() throws Exception{
-        JFrame login_frame = new JFrame("user login");
+        login_frame = new JFrame("user login");
         login_frame.setSize(400, 300);
         int login_frame_w = login_frame.getWidth() / 5, login_frame_h = login_frame.getHeight() / 11;
         login_frame.setLocationRelativeTo(null);
@@ -67,6 +74,7 @@ public class client {
         login_button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 name = user_name.getText();
+                pwd = user_pwd.getText();
                 ip = server_ip.getText();
                 port = Integer.parseInt(server_port.getText());
                 try {
@@ -85,39 +93,65 @@ public class client {
         login_frame.setVisible(true);
     }
     private static boolean link_server() throws IOException {
-        /*
         try {
             Socket soc = new Socket(ip, port);
             in = new Scanner(soc.getInputStream());
             out = new PrintWriter(soc.getOutputStream());
+            if (check_user() == false) {
+                JOptionPane.showMessageDialog(user_frame, "密码错误", "error", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
             return false;   
         }
-        */
-        return true;
+    }
+    private static boolean check_user() throws IOException {
+        try {
+            out.println("CHECKUSER " + name + " " + pwd);
+            while (in.hasNextLine()) {
+                String line = in.nextLine();
+                if (line.startsWith("RETCHECKUSER")) {
+                    if (line.substring(13) == "TRUE") {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
     }
     private static void user_dialog() {
         user_frame = new JFrame("用户: " + name);
         user_frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         user_frame.setSize(300, 600);
-        int user_frame_w = user_frame.getWidth() / 3, user_frame_h = user_frame.getHeight() / 6;
+        int user_frame_w = user_frame.getWidth() / 6, user_frame_h = user_frame.getHeight() / 6;
         user_frame.setResizable(false);
         user_frame.setLocationRelativeTo(null);
         user_frame.setLayout(null);
         Container con = user_frame.getContentPane();
         JButton chat_list = new JButton("聊天");
-        chat_list.setBounds(0, 0, user_frame_w, user_frame_h);
+        chat_list.setBounds(0, 0, user_frame_w * 2, user_frame_h);
         con.add(chat_list);
         JButton friend_list = new JButton("好友");
-        friend_list.setBounds(user_frame_w, 0, user_frame_w, user_frame_h);
+        friend_list.setBounds(user_frame_w * 2, 0, user_frame_w * 2, user_frame_h);
         con.add(friend_list);
         JButton group_list = new JButton("群");
-        group_list.setBounds(user_frame_w * 2, 0, user_frame_w, user_frame_h);
+        group_list.setBounds(user_frame_w * 4, 0, user_frame_w * 2, user_frame_h);
         con.add(group_list);
-        JList list = new JList(new String);
-        
+        JList list = new JList<String>();
+        //list.setBounds(0, user_frame_h, user_frame_w * 5, user_frame_h * 5);
+        //list.setListData(new String[]{"xxc1(ai)", "雪梨", "苹果", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨"});
+        JScrollPane scroll = new JScrollPane(list);
+        scroll.setBounds(0, user_frame_h, user_frame_w * 6 - 15, user_frame_h * 5);
+        con.add(scroll);
         user_frame.setVisible(true);
+    }
+    private static void deal_msg() {
+        
     }
 }

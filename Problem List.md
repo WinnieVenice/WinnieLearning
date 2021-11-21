@@ -88,7 +88,7 @@ https://ac.nowcoder.com/acm/problem/16544
 
 https://blog.csdn.net/alexingcool/article/details/7998085
 
-
+https://www.luogu.com.cn/problem/P5282
 
 ## 贝尔(bell)数
 
@@ -111,3 +111,11 @@ https://oi-wiki.org/misc/rollback-mo-algo/
 ## dp
 
 https://vjudge.net/contest/465708#problem/G
+
+## 平面最近点对
+
+https://www.luogu.com.cn/problem/P7883
+
+## 容斥
+
+https://blog.csdn.net/codeswarrior/article/details/81906367

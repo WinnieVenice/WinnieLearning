@@ -42,8 +42,14 @@ public class client implements Runnable{
     static String[] group_list;
     static String[] chat_list;
     static ArrayList<JFrame> chat_frame; 
+    static Queue<String> send_msg_queue;
+    String chat_name;
     public static void main(String[] args) throws Exception {
         login_dialog();
+    }
+    public client() {}
+    public client(String chat_name) {
+        this.chat_name = chat_name;
     }
     private static void login_dialog() throws Exception{
         login_frame = new JFrame("user login");
@@ -88,6 +94,8 @@ public class client implements Runnable{
                 port = Integer.parseInt(server_port.getText());
                 try {
                     if (link_server() == true) {
+                        chat_frame = new ArrayList<JFrame>();
+                        new client().run();
                         user_dialog();
                         login_frame.setVisible(false);
                     } else {
@@ -119,6 +127,33 @@ public class client implements Runnable{
         */
         return true;
     }
+    private static JFrame create_new_chat_frame(String frame_name) {
+        JFrame cur_frame = new JFrame(frame_name);
+        cur_frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        cur_frame.setSize(400, 300);
+        cur_frame.setResizable(false);
+        cur_frame.setLocationRelativeTo(null);
+        cur_frame.setLayout(null);
+        int w = cur_frame.getWidth() / 7, h = cur_frame.getHeight() / 9;
+        Container con = cur_frame.getContentPane();
+        JTextArea chating = new JTextArea();
+        chating.setBounds(w, h, w * 5 , h * 4);
+        con.add(chating);
+        JTextArea sendmsg = new JTextArea();
+        sendmsg.setBounds(w, h * 6, w * 5, h * 2);
+        con.add(sendmsg);
+        JButton send_button = new JButton("发送信息");
+        send_button.setBounds(w * 5, h * 7, w, h);
+        send_button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String line = "SENDMSG " + cur_frame.getTitle() + " " + sendmsg.getText();
+                send_msg_queue.add(line);
+            }
+        });
+        con.add(send_button);
+        cur_frame.setVisible(true);
+        return cur_frame;
+    }
     private static void user_dialog() {
         user_frame = new JFrame("用户: " + name);
         user_frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -133,20 +168,16 @@ public class client implements Runnable{
         MouseListener mouselistener = new MouseInputAdapter() {
             public void mouseClicked(MouseEvent e) {
                 String frame_name = list.getSelectedValue();
-                //System.out.println(frame_name);
                 boolean flag = false;
                 for (int i = 0; i < chat_frame.size(); i++) {
-                    if (chat_frame.get(i).getTitle() == frame_name) {
-                        chat_frame.get(i).setVisible(true);     
+                    if (frame_name == chat_frame.get(i).getTitle()) {
                         flag = true;
+                        chat_frame.get(i).setVisible(true);
                         break;
                     }
                 }
                 if (flag == false) {
-                    JFrame cur_chat = new JFrame(frame_name);
-                    cur_chat.setSize(400, 300);
-                    cur_chat.setVisible(true);
-                    chat_frame.add();
+                    chat_frame.add(create_new_chat_frame(frame_name));
                 }
             }   
         };
@@ -252,6 +283,12 @@ public class client implements Runnable{
         return false;
     }
     public void run() {
-
+        
+        while (true) {
+            while (send_msg_queue.isEmpty() == false) {
+                String line = send_msg_queue.peek(); send_msg_queue.poll();
+                out.println(line);
+            }
+        }
     }
 }

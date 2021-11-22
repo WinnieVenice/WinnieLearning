@@ -8,12 +8,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.Queue;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -29,7 +25,8 @@ import javax.swing.event.MouseInputListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
-public class client implements Runnable{
+public class client {
+    
     static String ip;
     static int port;
     static JFrame user_frame;
@@ -42,16 +39,17 @@ public class client implements Runnable{
     static String[] group_list;
     static String[] chat_list;
     static ArrayList<JFrame> chat_frame; 
-    static Queue<String> send_msg_queue;
+    static volatile Deque<String> send_msg_queue = new LinkedList<String>();
     String chat_name;
     public static void main(String[] args) throws Exception {
-        login_dialog();
+        new client().login_dialog();
     }
     public client() {}
     public client(String chat_name) {
+        
         this.chat_name = chat_name;
     }
-    private static void login_dialog() throws Exception{
+    private void login_dialog() throws Exception{
         login_frame = new JFrame("user login");
         login_frame.setSize(400, 300);
         int login_frame_w = login_frame.getWidth() / 5, login_frame_h = login_frame.getHeight() / 11;
@@ -86,6 +84,7 @@ public class client implements Runnable{
         con.add(server_port);
         JButton login_button = new JButton("注册/登录");
         login_button.setBounds(login_frame_w, login_frame_h * 8, login_frame_w * 3, login_frame_h);
+        new Thread(new send_msg(ip, port)).start();
         login_button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 name = user_name.getText();
@@ -95,7 +94,7 @@ public class client implements Runnable{
                 try {
                     if (link_server() == true) {
                         chat_frame = new ArrayList<JFrame>();
-                        new client().run();
+                        //new Thread(new client()).start();
                         user_dialog();
                         login_frame.setVisible(false);
                     } else {
@@ -110,8 +109,10 @@ public class client implements Runnable{
         login_frame.setVisible(true);
     }
     private static boolean link_server() throws IOException {
-        /*
         try {
+            System.out.println("ip: " + ip + ", port: " + port);
+            
+            /*
             Socket soc = new Socket(ip, port);
             in = new Scanner(soc.getInputStream());
             out = new PrintWriter(soc.getOutputStream());
@@ -119,13 +120,13 @@ public class client implements Runnable{
                 JOptionPane.showMessageDialog(user_frame, "密码错误", "error", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
+            */
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
             return false;   
         }
-        */
-        return true;
+        //return true;
     }
     private static JFrame create_new_chat_frame(String frame_name) {
         JFrame cur_frame = new JFrame(frame_name);
@@ -134,7 +135,7 @@ public class client implements Runnable{
         cur_frame.setResizable(false);
         cur_frame.setLocationRelativeTo(null);
         cur_frame.setLayout(null);
-        int w = cur_frame.getWidth() / 7, h = cur_frame.getHeight() / 9;
+        int w = cur_frame.getWidth() / 7, h = cur_frame.getHeight() / 11;
         Container con = cur_frame.getContentPane();
         JTextArea chating = new JTextArea();
         chating.setBounds(w, h, w * 5 , h * 4);
@@ -143,11 +144,16 @@ public class client implements Runnable{
         sendmsg.setBounds(w, h * 6, w * 5, h * 2);
         con.add(sendmsg);
         JButton send_button = new JButton("发送信息");
-        send_button.setBounds(w * 5, h * 7, w, h);
+        send_button.setBounds(w * 4, h * 8, w * 2, h);
         send_button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                String line = "SENDMSG " + cur_frame.getTitle() + " " + sendmsg.getText();
-                send_msg_queue.add(line);
+                String line = "SENDMSG " + name + " " + cur_frame.getTitle() + " " + sendmsg.getText();
+                //send_msg_queue.add(line);
+                //send_msg_queue.offer(line);
+                //System.out.println("q:" + send_msg_queue.peek());
+                //new client().run();
+                send_msg_queue.offer(line);
+                System.out.println("q:" + send_msg_queue.peek());
             }
         });
         con.add(send_button);
@@ -248,6 +254,7 @@ public class client implements Runnable{
             ex.printStackTrace();
             return false;
         }
+
         return true;
     }
     private static boolean REQUEST_friend_list() throws IOException{
@@ -282,13 +289,23 @@ public class client implements Runnable{
         }
         return false;
     }
-    public void run() {
-        
-        while (true) {
-            while (send_msg_queue.isEmpty() == false) {
-                String line = send_msg_queue.peek(); send_msg_queue.poll();
-                out.println(line);
+    private class send_msg implements Runnable{
+        String ip;
+        int port;
+        public send_msg(String ip, int port) {
+            this.ip = ip; this.port = port;
+        }
+        public void run() {
+            while (true) {
+                //System.out.println(send_msg_queue.size());
+                while (send_msg_queue.isEmpty() == false) {
+                    System.out.println("this");
+                    String line = send_msg_queue.peek(); send_msg_queue.poll();
+                    System.out.println(line);
+                    //out.println(line);
+                }
             }
         }
     }
+
 }

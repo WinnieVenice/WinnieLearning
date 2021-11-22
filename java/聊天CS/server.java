@@ -7,12 +7,9 @@ import java.util.HashSet;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-public class ChatServer {
-
+public class server {
     private static Set<String> names = new HashSet<>();
-
     private static Set<PrintWriter> writers = new HashSet<>();
-
     public static void main(String[] args) throws Exception {
         System.out.println("The chat server is running...");
         ExecutorService pool = Executors.newFixedThreadPool(500);
@@ -27,18 +24,14 @@ public class ChatServer {
         private String name;
         private Socket socket;
         private Scanner in;
-        private PrintWriter out;
-
-  
+        private PrintWriter out;  
         public Handler(Socket socket) {
             this.socket = socket;
         }
-
         public void run() {
             try {
                 in = new Scanner(socket.getInputStream());
                 out = new PrintWriter(socket.getOutputStream(), true);
-
                 // Keep requesting a name until we get a unique one.
                 while (true) {
                     out.println("SUBMITNAME");
@@ -53,13 +46,13 @@ public class ChatServer {
                         }
                     }
                 }
-
                 out.println("NAMEACCEPTED " + name);
+                System.out.println("NAMEACCPETED " + name);
                 for (PrintWriter writer : writers) {
                     writer.println("MESSAGE " + name + " has joined");
+                    System.out.println("MESSAGE " + name + " has joined");
                 }
                 writers.add(out);
-
                 while (true) {
                     String input = in.nextLine();
                     if (input.toLowerCase().startsWith("/quit")) {

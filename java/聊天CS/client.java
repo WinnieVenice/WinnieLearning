@@ -40,6 +40,7 @@ public class client {
     static String[] chat_list;
     static ArrayList<JFrame> chat_frame; 
     static volatile Deque<String> send_msg_queue = new LinkedList<String>();
+    static volatile Deque<String> get_msg_queue = new LinkedList<String>();
     String chat_name;
     public static void main(String[] args) throws Exception {
         new client().login_dialog();
@@ -84,7 +85,6 @@ public class client {
         con.add(server_port);
         JButton login_button = new JButton("注册/登录");
         login_button.setBounds(login_frame_w, login_frame_h * 8, login_frame_w * 3, login_frame_h);
-        new Thread(new send_msg(ip, port)).start();
         login_button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 name = user_name.getText();
@@ -94,7 +94,8 @@ public class client {
                 try {
                     if (link_server() == true) {
                         chat_frame = new ArrayList<JFrame>();
-                        //new Thread(new client()).start();
+                        new Thread(new send_msg()).start();
+                        new Thread(new get_msg()).start();
                         user_dialog();
                         login_frame.setVisible(false);
                     } else {
@@ -111,8 +112,6 @@ public class client {
     private static boolean link_server() throws IOException {
         try {
             System.out.println("ip: " + ip + ", port: " + port);
-            
-            /*
             Socket soc = new Socket(ip, port);
             in = new Scanner(soc.getInputStream());
             out = new PrintWriter(soc.getOutputStream());
@@ -120,7 +119,6 @@ public class client {
                 JOptionPane.showMessageDialog(user_frame, "密码错误", "error", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
-            */
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -254,7 +252,6 @@ public class client {
             ex.printStackTrace();
             return false;
         }
-
         return true;
     }
     private static boolean REQUEST_friend_list() throws IOException{
@@ -289,23 +286,29 @@ public class client {
         }
         return false;
     }
-    private class send_msg implements Runnable{
-        String ip;
-        int port;
-        public send_msg(String ip, int port) {
-            this.ip = ip; this.port = port;
-        }
+    private class send_msg implements Runnable {
+        public send_msg() {}
         public void run() {
             while (true) {
                 //System.out.println(send_msg_queue.size());
                 while (send_msg_queue.isEmpty() == false) {
-                    System.out.println("this");
                     String line = send_msg_queue.peek(); send_msg_queue.poll();
-                    System.out.println(line);
-                    //out.println(line);
+                    System.out.println("有新的信息发送: " + line);
+                    out.println(line);
                 }
             }
         }
     }
-
+    private class get_msg implements Runnable {
+        public get_msg() {}
+        public void run() {
+            while (true) {
+                String line = in.nextLine();
+                if (line != null) {
+                    System.out.println("有新的信息收到: " + line);
+                    get_msg_queue.offer(line);
+                }
+            }
+        }
+    }
 }

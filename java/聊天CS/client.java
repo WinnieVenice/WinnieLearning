@@ -114,7 +114,7 @@ public class client {
             System.out.println("ip: " + ip + ", port: " + port);
             Socket soc = new Socket(ip, port);
             in = new Scanner(soc.getInputStream());
-            out = new PrintWriter(soc.getOutputStream());
+            out = new PrintWriter(soc.getOutputStream(), true);
             if (REQUEST_check_user() == false) {
                 JOptionPane.showMessageDialog(user_frame, "密码错误", "error", JOptionPane.ERROR_MESSAGE);
                 return false;
@@ -238,10 +238,11 @@ public class client {
     private static boolean REQUEST_check_user() throws IOException {
         try {
             out.println("CHECKUSER " + name + " " + pwd);
-            while (in.hasNextLine()) {
+            System.out.println("发送登录请求");
+            while (true) {
                 String line = in.nextLine();
                 if (line.startsWith("RETCHECKUSER")) {
-                    if (line.substring(13) == "TRUE") {
+                    if (line.substring(13).equals("TRUE")) {
                         return true;
                     } else {
                         return false;
@@ -252,7 +253,7 @@ public class client {
             ex.printStackTrace();
             return false;
         }
-        return true;
+        //return true;
     }
     private static boolean REQUEST_friend_list() throws IOException{
         try {

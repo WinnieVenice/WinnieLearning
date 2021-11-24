@@ -34,14 +34,19 @@ public class server {
                 in = new Scanner(socket.getInputStream());
                 out = new PrintWriter(socket.getOutputStream(), true);
                 // Keep requesting a name until we get a unique one.
+                System.out.println("有新的用户进入");
                 while (true) {
                     String line = in.nextLine();
+                    System.out.println("当前消息: " + line);
                     if (line.startsWith("CHECKUSER")) {
+                        System.out.println("收到用户登录申请");
                         line = line.substring(10);
                         name = line.split(" ")[0];
                         pwd = line.split(" ")[1];
+                        System.out.println("当前用户: " + name + " " + pwd);
                         synchronized (users) {
                             if (line.length() == 0) break;
+                            System.out.println(users.get(line) == null);
                             if (users.get(line) == null) {
                                 users.put(name, pwd);
                                 out.println("RETCHECKUSER TRUE");

@@ -36,12 +36,13 @@ public class server {
             for (String x: users.keySet()) {
                 System.out.println(x + " " + users.get(x));
             }
-            bfw.write("aaaaaaaaaa");
+            bfw.newLine();
             System.out.println("读取用户信息成功");
             System.out.println("The chat server is running...");
+            Scanner cin = new Scanner(System.in);
             ExecutorService pool = Executors.newFixedThreadPool(500);
             try (ServerSocket listener = new ServerSocket(59001)) {
-                while (true) {
+                while (!cin.hasNextLine()) {
                     pool.execute(new Handler(listener.accept()));
                 }
             }
@@ -111,7 +112,7 @@ public class server {
 
                         } else if (line.equals("SENDMSG")) {
 
-                        }
+                        } 
                     }
                 }
                 /*

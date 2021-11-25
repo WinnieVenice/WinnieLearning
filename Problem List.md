@@ -119,3 +119,10 @@ https://www.luogu.com.cn/problem/P7883
 ## 容斥
 
 https://blog.csdn.net/codeswarrior/article/details/81906367
+
+
+
+## 错排
+
+http://acm.hdu.edu.cn/showproblem.php?pid=2049
+

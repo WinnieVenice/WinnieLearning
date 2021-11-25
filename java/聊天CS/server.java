@@ -1,3 +1,7 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -10,8 +14,20 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 public class server {
     private static HashMap<String,String> users = new HashMap<String,String>();
+    private static Set<String> online_users = new HashSet<String>();
     private static Set<PrintWriter> writers = new HashSet<>();
     public static void main(String[] args) throws Exception {
+        File file = new File(".//userdata.txt");
+        FileReader fr = new FileReader(file);
+        BufferedReader bfr = new BufferedReader(fr);
+        for (String rd = bfr.readLine(); rd != null; rd = bfr.readLine()) {
+            System.out.println("当前数据信息: " + rd);
+            users.put(rd.split(" ")[0], rd.split(" ")[1]);
+        }
+        for (String x: users.keySet()) {
+            System.out.println(x + " " + users.get(x));
+        }
+        System.out.println("读取用户信息成功");
         System.out.println("The chat server is running...");
         ExecutorService pool = Executors.newFixedThreadPool(500);
         try (ServerSocket listener = new ServerSocket(59001)) {
@@ -45,25 +61,37 @@ public class server {
                         pwd = line.split(" ")[1];
                         System.out.println("当前用户: " + name + " " + pwd);
                         synchronized (users) {
-                            if (line.length() == 0) break;
-                            System.out.println(users.get(line) == null);
-                            if (users.get(line) == null) {
+                            if (line.length() == 0) {
+                                out.println("RETCHECKUSER FALSE");
+                            } if (online_users.contains(name)) {
+                                out.println("RETCHECKUSER FALSE");
+                            } else if (users.get(name) == null) {
                                 users.put(name, pwd);
+                                online_users.add(name);
                                 out.println("RETCHECKUSER TRUE");
-                            } else if (users.get(line) == pwd) {
+                            } else if (users.get(name).equals(pwd)) {
+                                online_users.add(name);
                                 out.println("RETCHECKUSER TRUE");
                             } else {
-                                out.println("RECHECKUSER FALSE");
+                                out.println("RETCHECKUSER FALSE");
                             }
                             break;
                         }
                     }
                 }
                 System.out.println("用户: " + name + ",连接服务器成功");
+                writers.add(out);
                 while (true) {
                     String line = in.nextLine();
                     if (line != null) {
                         System.out.println(line);
+                        if (line.equals("FRIENDLIST")) {
+                            
+                        } else if (line.equals("GROUPLIST")) {
+
+                        } else if (line.equals("SENDMSG")) {
+
+                        }
                     }
                 }
                 /*

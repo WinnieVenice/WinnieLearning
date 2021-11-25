@@ -116,7 +116,7 @@ public class client {
             in = new Scanner(soc.getInputStream());
             out = new PrintWriter(soc.getOutputStream(), true);
             if (REQUEST_check_user() == false) {
-                JOptionPane.showMessageDialog(user_frame, "密码错误", "error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(user_frame, "登陆失败", "error", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
             return true;
@@ -128,7 +128,7 @@ public class client {
     }
     private static JFrame create_new_chat_frame(String frame_name) {
         JFrame cur_frame = new JFrame(frame_name);
-        cur_frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //cur_frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         cur_frame.setSize(400, 300);
         cur_frame.setResizable(false);
         cur_frame.setLocationRelativeTo(null);
@@ -146,10 +146,6 @@ public class client {
         send_button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 String line = "SENDMSG " + name + " " + cur_frame.getTitle() + " " + sendmsg.getText();
-                //send_msg_queue.add(line);
-                //send_msg_queue.offer(line);
-                //System.out.println("q:" + send_msg_queue.peek());
-                //new client().run();
                 send_msg_queue.offer(line);
                 System.out.println("q:" + send_msg_queue.peek());
             }
@@ -242,6 +238,7 @@ public class client {
             while (true) {
                 String line = in.nextLine();
                 if (line.startsWith("RETCHECKUSER")) {
+                    System.out.println(line);
                     if (line.substring(13).equals("TRUE")) {
                         return true;
                     } else {

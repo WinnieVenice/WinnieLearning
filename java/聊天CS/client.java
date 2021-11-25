@@ -26,7 +26,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 public class client {
-    
+    static Socket soc;
     static String ip;
     static int port;
     static JFrame user_frame;
@@ -43,11 +43,16 @@ public class client {
     static volatile Deque<String> get_msg_queue = new LinkedList<String>();
     String chat_name;
     public static void main(String[] args) throws Exception {
-        new client().login_dialog();
+        try {
+            new client().login_dialog();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            soc.close();
+        }
     }
     public client() {}
     public client(String chat_name) {
-        
         this.chat_name = chat_name;
     }
     private void login_dialog() throws Exception{
@@ -112,7 +117,7 @@ public class client {
     private static boolean link_server() throws IOException {
         try {
             System.out.println("ip: " + ip + ", port: " + port);
-            Socket soc = new Socket(ip, port);
+            soc = new Socket(ip, port);
             in = new Scanner(soc.getInputStream());
             out = new PrintWriter(soc.getOutputStream(), true);
             if (REQUEST_check_user() == false) {

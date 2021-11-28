@@ -126,3 +126,9 @@ https://blog.csdn.net/codeswarrior/article/details/81906367
 
 http://acm.hdu.edu.cn/showproblem.php?pid=2049
 
+## 回文串
+
+https://blog.csdn.net/u010579068/article/details/49207691
+
+## 拓展域并查集
+

@@ -2,10 +2,7 @@ import java.awt.Container;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Queue;
@@ -22,8 +19,12 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.event.MouseInputAdapter;
 import javax.swing.event.MouseInputListener;
+
+
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 public class client {
     static Socket soc;
@@ -93,7 +94,15 @@ public class client {
         login_button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 name = user_name.getText();
+                if (name == null || name.equals("")) {
+                    JOptionPane.showMessageDialog(login_frame, "用户名为空", "error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 pwd = user_pwd.getText();
+                if (pwd == null || pwd.equals("")) {
+                    JOptionPane.showMessageDialog(login_frame, "用户名为空", "error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 ip = server_ip.getText();
                 port = Integer.parseInt(server_port.getText());
                 try {
@@ -120,10 +129,12 @@ public class client {
             soc = new Socket(ip, port);
             in = new Scanner(soc.getInputStream());
             out = new PrintWriter(soc.getOutputStream(), true);
+            /*
             if (REQUEST_check_user() == false) {
                 JOptionPane.showMessageDialog(user_frame, "登陆失败", "error", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
+            */
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -133,7 +144,6 @@ public class client {
     }
     private static JFrame create_new_chat_frame(String frame_name) {
         JFrame cur_frame = new JFrame(frame_name);
-        //cur_frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         cur_frame.setSize(400, 300);
         cur_frame.setResizable(false);
         cur_frame.setLocationRelativeTo(null);
@@ -159,20 +169,74 @@ public class client {
         cur_frame.setVisible(true);
         return cur_frame;
     }
-    private static void user_dialog() {
+    private static boolean find(Vector<String> s, String v) {
+        for (int i = 0; i < s.size(); i++) {
+            if (s.get(i).equals(v)) return true;
+        }
+        return false;
+    }
+    private static void user_dialog() throws Exception {
+        File f_friend = new File(".//" + name + "_friend.txt");
+        BufferedReader bfr1 = new BufferedReader(new InputStreamReader(new FileInputStream(f_friend), "utf-8"));
+        File f_group = new File(".//" + name + "_group.txt");
+        BufferedReader bfr2 = new BufferedReader(new InputStreamReader(new FileInputStream(f_group), "utf-8"));
+        Vector<String> friendlist = new Vector<String>();
+        Vector<String> grouplist = new Vector<String>();
+        if (!f_friend.exists()) {
+            f_friend.createNewFile();
+        }
+        for (String rd = bfr1.readLine(); rd != null; rd = bfr1.readLine()) {
+            System.out.println("当前好友: " + rd);
+            friendlist.add(rd);
+        }
+        if (!f_group.exists()) { 
+            f_group.createNewFile();
+        }
+        for (String rd = bfr2.readLine(); rd != null; rd = bfr2.readLine()) {
+            System.out.println("当前群: " + rd);
+            grouplist.add(rd);
+        }
         user_frame = new JFrame("用户: " + name);
         user_frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        user_frame.addWindowListener(new WindowListener() {
+            public void windowDeactivated(WindowEvent e) {}
+            public void windowActivated(WindowEvent e) {}
+            public void windowDeiconified(WindowEvent e) {}
+            public void windowIconified(WindowEvent e) {}
+            public void windowClosed(WindowEvent e) {}
+            public void windowOpened(WindowEvent e) {}
+            public void windowClosing(WindowEvent e) {
+                try {
+                    bfr1.close();
+                    bfr2.close();
+                    BufferedWriter bfw1 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f_friend), "utf-8"));
+                    BufferedWriter bfw2 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f_group), "utf-8"));
+                    for (int i = 0; i < friendlist.size(); i++) {
+                        bfw1.write(friendlist.get(i));
+                        bfw1.newLine();
+                    }
+                    bfw1.close();
+                    for (int i = 0; i < grouplist.size(); i++) {
+                        bfw2.write(grouplist.get(i));
+                        bfw2.newLine();
+                    }
+                    bfw2.close();
+                } catch(Exception ex) {
+                    ex.printStackTrace();
+                } 
+            }
+        });
         user_frame.setSize(300, 600);
-        int user_frame_w = user_frame.getWidth() / 6, user_frame_h = user_frame.getHeight() / 6;
+        int user_frame_w = user_frame.getWidth() / 8, user_frame_h = user_frame.getHeight() / 6;
         user_frame.setResizable(false);
         user_frame.setLocationRelativeTo(null);
         user_frame.setLayout(null);
         Container con = user_frame.getContentPane();
         JList<String> list = new JList<String>();
-        list.setListData(new String[]{"wwj", "xxc", "hzb", "zrf"});
         MouseListener mouselistener = new MouseInputAdapter() {
             public void mouseClicked(MouseEvent e) {
                 String frame_name = list.getSelectedValue();
+                if (frame_name == null || frame_name.equals("")) return;
                 boolean flag = false;
                 for (int i = 0; i < chat_frame.size(); i++) {
                     if (frame_name == chat_frame.get(i).getTitle()) {
@@ -187,52 +251,64 @@ public class client {
             }   
         };
         list.addMouseListener(mouselistener);
-        JButton chat_button = new JButton("聊天");
-        chat_button.setBounds(0, 0, user_frame_w * 2, user_frame_h);
-        chat_button.addActionListener(new ActionListener() {
+        JLabel add_name_text = new JLabel("所添加好友/群名:");
+        add_name_text.setBounds(0, 0, user_frame_w * 3, user_frame_h);
+        con.add(add_name_text);
+        JTextArea add_name = new JTextArea();
+        add_name.setBounds(user_frame_w * 3, 0, user_frame_w * 5, user_frame_h);
+        con.add(add_name);
+        JButton add_friend = new JButton("加好友");
+        add_friend.setBounds(0, user_frame_h, user_frame_w * 2, user_frame_h);
+        add_friend.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                list.setListData(chat_list);
+                String s = add_name.getText();
+                if (s == null || s.equals("")) {
+                    JOptionPane.showMessageDialog(user_frame, "输入为空", "error", JOptionPane.ERROR_MESSAGE);
+                } else if (find(friendlist, s)) {
+                    JOptionPane.showMessageDialog(user_frame, "已添加过该好友", "提示", JOptionPane.ERROR_MESSAGE);    
+                } else {
+                    friendlist.add(s);
+                    list.setListData(friendlist);
+                }
             }
         });
-        con.add(chat_button);
+        con.add(add_friend);
+        JButton add_group = new JButton("加群");
+        add_group.setBounds(user_frame_w * 2, user_frame_h, user_frame_w * 2, user_frame_h);
+        add_group.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String s = add_name.getText();
+                if (s == null || s.equals("")) {
+                    JOptionPane.showMessageDialog(user_frame, "输入为空", "error", JOptionPane.ERROR_MESSAGE);
+                } else if (find(grouplist, s)) {
+                    JOptionPane.showMessageDialog(user_frame, "已添加过该群", "提示", JOptionPane.ERROR_MESSAGE);    
+                } else {
+                    grouplist.add(s);
+                    list.setListData(grouplist);
+                }
+            }
+        });
+        con.add(add_group);
         JButton friend_button = new JButton("好友");
-        friend_button.setBounds(user_frame_w * 2, 0, user_frame_w * 2, user_frame_h);
+        friend_button.setBounds(user_frame_w * 4, user_frame_h, user_frame_w * 2, user_frame_h);
         friend_button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                try {
-                    if (REQUEST_friend_list() == true) {
-                        list.setListData(friend_list);
-                    } else {
-                        JOptionPane.showMessageDialog(user_frame, "获取好友列表失败", "error", JOptionPane.ERROR_MESSAGE);
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(user_frame, "获取好友列表失败", "error", JOptionPane.ERROR_MESSAGE);
-                }
+                list.setListData(friendlist);
             }
         });
         con.add(friend_button);
         JButton group_button = new JButton("群");
-        group_button.setBounds(user_frame_w * 4, 0, user_frame_w * 2, user_frame_h);
+        group_button.setBounds(user_frame_w * 6, user_frame_h, user_frame_w * 2, user_frame_h);
         group_button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                try {
-                    if (REQUEST_group_list() == true) {
-                        list.setListData(group_list);
-                    } else {
-                        JOptionPane.showMessageDialog(user_frame, "获取群列表失败", "error", JOptionPane.ERROR_MESSAGE);
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(user_frame, "获取群列表失败", "error", JOptionPane.ERROR_MESSAGE);
-                }
+                list.setListData(grouplist);
             }
         });
         con.add(group_button);
         //list.setBounds(0, user_frame_h, user_frame_w * 5, user_frame_h * 5);
         //list.setListData(new String[]{"xxc1(ai)", "雪梨", "苹果", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨"});
         JScrollPane scroll = new JScrollPane(list);
-        scroll.setBounds(0, user_frame_h, user_frame_w * 6 - 15, user_frame_h * 5);
+        scroll.setBounds(0, user_frame_h * 2, user_frame_w * 8 - 15, user_frame_h * 5);
         con.add(scroll);
         user_frame.setVisible(true);
     }
@@ -293,7 +369,6 @@ public class client {
         public send_msg() {}
         public void run() {
             while (true) {
-                //System.out.println(send_msg_queue.size());
                 while (send_msg_queue.isEmpty() == false) {
                     String line = send_msg_queue.peek(); send_msg_queue.poll();
                     System.out.println("有新的信息发送: " + line);

@@ -31,7 +31,9 @@ public class server {
             bfw = new BufferedWriter(fw);
             for (String rd = bfr.readLine(); rd != null; rd = bfr.readLine()) {
                 System.out.println("当前数据信息: " + rd);
-                users.put(rd.split(" ")[0], rd.split(" ")[1]);
+                if (rd.split(" ").length > 1) {
+                    users.put(rd.split(" ")[0], rd.split(" ")[1]);
+                }
             }
             for (String x: users.keySet()) {
                 System.out.println(x + " " + users.get(x));
@@ -61,6 +63,11 @@ public class server {
         private Socket socket;
         private Scanner in;
         private PrintWriter out;  
+        private File f; 
+        private FileReader fr;
+        private BufferedReader bfr;
+        private FileWriter fw;
+        private BufferedWriter bfw;
         public Handler(Socket socket) {
             this.socket = socket;
         }
@@ -70,6 +77,7 @@ public class server {
                 out = new PrintWriter(socket.getOutputStream(), true);
                 // Keep requesting a name until we get a unique one.
                 System.out.println("有新的用户进入");
+                boolean flag = true;
                 while (true) {
                     String line = in.nextLine();
                     System.out.println("当前消息: " + line);
@@ -82,37 +90,49 @@ public class server {
                         synchronized (users) {
                             if (line.length() == 0) {
                                 out.println("RETCHECKUSER FALSE");
+                                flag = false;
                             } if (online_users.contains(name)) {
                                 out.println("RETCHECKUSER FALSE");
+                                flag = false;
                             } else if (users.get(name) == null) {
                                 System.out.println("创建新用户: " + name + " " + pwd);
                                 users.put(name, pwd);
                                 online_users.add(name);
                                 out.println("RETCHECKUSER TRUE");
                                 bfw.write(name + " " + pwd);
+                                bfw.newLine();
                             } else if (users.get(name).equals(pwd)) {
                                 online_users.add(name);
                                 out.println("RETCHECKUSER TRUE");
                             } else {
                                 out.println("RETCHECKUSER FALSE");
+                                flag = false;
                             }
                             break;
                         }
                     }
                 }
-                System.out.println("用户: " + name + ",连接服务器成功");
+                if (flag) System.out.println("用户: " + name + ",连接服务器成功");
+                else {
+                    System.out.println("用户: " + name + ",连接服务器失败");
+                    return;
+                }
                 writers.add(out);
                 while (true) {
                     String line = in.nextLine();
                     if (line != null) {
                         System.out.println(line);
-                        if (line.equals("FRIENDLIST")) {
+                        if (line.startsWith("FRIENDLIST")) {
+                            String s = "RETFRIENDLIST";
                             
-                        } else if (line.equals("GROUPLIST")) {
+                            out.println(s);
+                        } else if (line.startsWith("GROUPLIST")) {
 
-                        } else if (line.equals("SENDMSG")) {
+                        } else if (line.startsWith("SENDMSG")) {
 
-                        } 
+                        } else if (line.startsWith("QUIT")) {
+
+                        }
                     }
                 }
                 /*

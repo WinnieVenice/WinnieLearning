@@ -1,34 +1,56 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Set;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.awt.event.*;
+import javax.swing.JFrame;
 public class server {
     private static HashMap<String,String> users = new HashMap<String,String>();
-    private static Set<String> online_users = new HashSet<String>();
-    private static Set<PrintWriter> writers = new HashSet<>();
+    private static HashMap<String, PrintWriter> online_users = new HashMap<String, PrintWriter>();
     private static File userdata = new File(".//userdata.txt");
-    private static FileReader fr;
     private static BufferedReader bfr;
-    private static FileWriter fw;
     private static BufferedWriter bfw;
     public static void main(String[] args) throws Exception {
         try {
-            fr = new FileReader(userdata);
-            bfr = new BufferedReader(fr);
-            fw = new FileWriter(userdata, true);
-            bfw = new BufferedWriter(fw);
+            bfr = new BufferedReader(new InputStreamReader(new FileInputStream(userdata), "utf-8"));           
+            JFrame server_frame = new JFrame("服务端");
+            server_frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            server_frame.setSize(400, 300);
+            server_frame.setResizable(false);
+            server_frame.setVisible(true);
+            server_frame.addWindowListener(new WindowListener() {
+                public void windowDeactivated(WindowEvent e) {}
+                public void windowActivated(WindowEvent e) {}
+                public void windowDeiconified(WindowEvent e) {}
+                public void windowIconified(WindowEvent e) {}
+                public void windowClosed(WindowEvent e) {}
+                public void windowOpened(WindowEvent e) {}
+                public void windowClosing(WindowEvent e) {
+                    try {
+                        bfr.close();
+                        bfw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(userdata), "utf-8"));
+                        for (String x : users.keySet()) {
+                            bfw.write(x + " " + users.get(x));
+                            bfw.newLine();
+                        }
+                        bfw.close();
+                    } catch(Exception ex) {
+                        ex.printStackTrace();
+                    } 
+                }
+            });
             for (String rd = bfr.readLine(); rd != null; rd = bfr.readLine()) {
                 System.out.println("当前数据信息: " + rd);
                 if (rd.split(" ").length > 1) {
@@ -38,13 +60,12 @@ public class server {
             for (String x: users.keySet()) {
                 System.out.println(x + " " + users.get(x));
             }
-            bfw.newLine();
             System.out.println("读取用户信息成功");
             System.out.println("The chat server is running...");
-            Scanner cin = new Scanner(System.in);
+            boolean flag = true;
             ExecutorService pool = Executors.newFixedThreadPool(500);
             try (ServerSocket listener = new ServerSocket(59001)) {
-                while (!cin.hasNextLine()) {
+                while (flag) {
                     pool.execute(new Handler(listener.accept()));
                 }
             }
@@ -52,9 +73,12 @@ public class server {
             e.printStackTrace();
         } finally {
             bfr.close();
-            fr.close();
+            bfw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(userdata), "utf-8"));
+            for (String x : users.keySet()) {
+                bfw.write(x + " " + users.get(x));
+                bfw.newLine();
+            }
             bfw.close();
-            fw.close();
         }
     }
     private static class Handler implements Runnable {
@@ -62,20 +86,15 @@ public class server {
         private String pwd;
         private Socket socket;
         private Scanner in;
-        private PrintWriter out;  
-        private File f; 
-        private FileReader fr;
-        private BufferedReader bfr;
-        private FileWriter fw;
-        private BufferedWriter bfw;
+        private PrintWriter out;
         public Handler(Socket socket) {
+            System.out.println("线程建立成功");
             this.socket = socket;
         }
         public void run() {
             try {
                 in = new Scanner(socket.getInputStream());
                 out = new PrintWriter(socket.getOutputStream(), true);
-                // Keep requesting a name until we get a unique one.
                 System.out.println("有新的用户进入");
                 boolean flag = true;
                 while (true) {
@@ -91,18 +110,16 @@ public class server {
                             if (line.length() == 0) {
                                 out.println("RETCHECKUSER FALSE");
                                 flag = false;
-                            } if (online_users.contains(name)) {
+                            } if (online_users.get(name) == null) {
                                 out.println("RETCHECKUSER FALSE");
                                 flag = false;
                             } else if (users.get(name) == null) {
                                 System.out.println("创建新用户: " + name + " " + pwd);
                                 users.put(name, pwd);
-                                online_users.add(name);
+                                online_users.put(name, out);
                                 out.println("RETCHECKUSER TRUE");
-                                bfw.write(name + " " + pwd);
-                                bfw.newLine();
                             } else if (users.get(name).equals(pwd)) {
-                                online_users.add(name);
+                                online_users.put(name, out);
                                 out.println("RETCHECKUSER TRUE");
                             } else {
                                 out.println("RETCHECKUSER FALSE");
@@ -117,66 +134,31 @@ public class server {
                     System.out.println("用户: " + name + ",连接服务器失败");
                     return;
                 }
-                writers.add(out);
                 while (true) {
+                    if (!in.hasNext()) continue;
                     String line = in.nextLine();
                     if (line != null) {
                         System.out.println(line);
-                        if (line.startsWith("FRIENDLIST")) {
-                            String s = "RETFRIENDLIST";
+                        if (line.startsWith("SENDMSG")) {
+                            String s = line.substring(8);
+                            String[] ss = s.split(" ");
+                            if (online_users.get(ss[1]) == null) {
+                                System.out.println("用户: " + ss[1] + "不在线");
+                                out.println("RETSENDMSG ERROR");
+                                continue;
+                            }
                             
-                            out.println(s);
-                        } else if (line.startsWith("GROUPLIST")) {
-
-                        } else if (line.startsWith("SENDMSG")) {
-
-                        } else if (line.startsWith("QUIT")) {
-
                         }
                     }
                 }
-                /*
-                for (PrintWriter writer : writers) {
-                    writer.println("MESSAGE " + name + " has joined");
-                    System.out.println("MESSAGE " + name + " has joined");
-                }
-                writers.add(out);
-                while (true) {
-                    String input = in.nextLine();
-                    if (input.toLowerCase().startsWith("/quit")) {
-                        return;
-                    }
-                    for (PrintWriter writer : writers) {
-                        writer.println("MESSAGE " + name + ": " + input);
-                    }
-                }
-                */
             } catch (Exception e) {
-                System.out.println(e);
+                e.printStackTrace();
             } finally {
                 try {
-                    bfr.close();
-                    fr.close();
-                    bfw.close();
-                    fw.close();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-                /*
-                if (out != null) {
-                    writers.remove(out);
-                }
-                if (name != null) {
-                    System.out.println(name + " is leaving");
-                    for (PrintWriter writer : writers) {
-                        writer.println("MESSAGE " + name + " has left");
-                    }
-                }   
-                try {
                     socket.close();
-                } catch (IOException e) {
+                }catch(Exception e) {
+                    e.printStackTrace();
                 }
-                */
             }
         }
     }

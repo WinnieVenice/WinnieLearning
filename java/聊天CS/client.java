@@ -13,12 +13,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.event.MouseInputAdapter;
-import javax.swing.event.MouseInputListener;
 
 
 import java.awt.event.MouseEvent;
@@ -44,13 +42,7 @@ public class client {
     static volatile Deque<String> get_msg_queue = new LinkedList<String>();
     String chat_name;
     public static void main(String[] args) throws Exception {
-        try {
-            new client().login_dialog();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            soc.close();
-        }
+        new client().login_dialog();
     }
     public client() {}
     public client(String chat_name) {
@@ -127,14 +119,14 @@ public class client {
         try {
             System.out.println("ip: " + ip + ", port: " + port);
             soc = new Socket(ip, port);
+            System.out.println(soc.getClass());
             in = new Scanner(soc.getInputStream());
             out = new PrintWriter(soc.getOutputStream(), true);
-            /*
             if (REQUEST_check_user() == false) {
                 JOptionPane.showMessageDialog(user_frame, "登陆失败", "error", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
-            */
+            
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -305,8 +297,6 @@ public class client {
             }
         });
         con.add(group_button);
-        //list.setBounds(0, user_frame_h, user_frame_w * 5, user_frame_h * 5);
-        //list.setListData(new String[]{"xxc1(ai)", "雪梨", "苹果", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "荔枝", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨", "雪梨"});
         JScrollPane scroll = new JScrollPane(list);
         scroll.setBounds(0, user_frame_h * 2, user_frame_w * 8 - 15, user_frame_h * 5);
         con.add(scroll);
@@ -333,38 +323,6 @@ public class client {
         }
         //return true;
     }
-    private static boolean REQUEST_friend_list() throws IOException{
-        try {
-            out.println("FRIENDLIST " + name);
-            while (in.hasNextLine()) {
-                String line = in.nextLine();
-                if (line.startsWith("RETFRIENDLIST")) {
-                    friend_list = line.substring(14).split(" ");
-                    return true;
-                } else return false;
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return false;
-        }
-        return false;
-    }
-    private static boolean REQUEST_group_list() throws IOException{
-        try {
-            out.println("GROUPLIST " + name);
-            while (in.hasNextLine()) {
-                String line = in.nextLine();
-                if (line.startsWith("RETGROUPLIST")) {
-                    group_list = line.substring(13).split(" ");
-                    return true;
-                } else return false;
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return false;
-        }
-        return false;
-    }
     private class send_msg implements Runnable {
         public send_msg() {}
         public void run() {
@@ -381,6 +339,7 @@ public class client {
         public get_msg() {}
         public void run() {
             while (true) {
+                if (!in.hasNext()) continue;
                 String line = in.nextLine();
                 if (line != null) {
                     System.out.println("有新的信息收到: " + line);

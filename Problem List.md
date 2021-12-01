@@ -112,6 +112,8 @@ https://oi-wiki.org/misc/rollback-mo-algo/
 
 https://vjudge.net/contest/465708#problem/G
 
+https://codeforces.com/contest/1613/problem/D
+
 ## 平面最近点对
 
 https://www.luogu.com.cn/problem/P7883

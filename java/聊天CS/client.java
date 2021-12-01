@@ -36,10 +36,11 @@ public class client {
     static PrintWriter out;
     static String[] friend_list;
     static String[] group_list;
-    static String[] chat_list;
-    static ArrayList<JFrame> chat_frame; 
+    static String[] chat_list; 
+    static volatile HashMap<String, chat_dialog> chat_frame;
     static volatile Deque<String> send_msg_queue = new LinkedList<String>();
     static volatile Deque<String> get_msg_queue = new LinkedList<String>();
+    static boolean T;
     String chat_name;
     public static void main(String[] args) throws Exception {
         new client().login_dialog();
@@ -99,7 +100,7 @@ public class client {
                 port = Integer.parseInt(server_port.getText());
                 try {
                     if (link_server() == true) {
-                        chat_frame = new ArrayList<JFrame>();
+                        chat_frame = new HashMap<String, chat_dialog>();
                         new Thread(new send_msg()).start();
                         new Thread(new get_msg()).start();
                         user_dialog();
@@ -134,32 +135,43 @@ public class client {
         }
         //return true;
     }
-    private static JFrame create_new_chat_frame(String frame_name) {
-        JFrame cur_frame = new JFrame(frame_name);
-        cur_frame.setSize(400, 300);
-        cur_frame.setResizable(false);
-        cur_frame.setLocationRelativeTo(null);
-        cur_frame.setLayout(null);
-        int w = cur_frame.getWidth() / 7, h = cur_frame.getHeight() / 11;
-        Container con = cur_frame.getContentPane();
-        JTextArea chating = new JTextArea();
-        chating.setBounds(w, h, w * 5 , h * 4);
-        con.add(chating);
-        JTextArea sendmsg = new JTextArea();
-        sendmsg.setBounds(w, h * 6, w * 5, h * 2);
-        con.add(sendmsg);
-        JButton send_button = new JButton("发送信息");
-        send_button.setBounds(w * 4, h * 8, w * 2, h);
-        send_button.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String line = "SENDMSG " + name + " " + cur_frame.getTitle() + " " + sendmsg.getText();
-                send_msg_queue.offer(line);
-                System.out.println("q:" + send_msg_queue.peek());
-            }
-        });
-        con.add(send_button);
-        cur_frame.setVisible(true);
-        return cur_frame;
+    private static class chat_dialog {
+        JFrame cur_frame;
+        JTextArea chating, sendmsg;
+        JButton send_button;
+        boolean T;
+        public chat_dialog(String frame_name, boolean T) {
+            this.T = T;
+            cur_frame = new JFrame(frame_name);
+            cur_frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            cur_frame.setSize(400, 300);
+            cur_frame.setResizable(false);
+            cur_frame.setLocationRelativeTo(null);
+            cur_frame.setLayout(null);
+            int w = cur_frame.getWidth() / 7, h = cur_frame.getHeight() / 11;
+            Container con = cur_frame.getContentPane();
+            chating = new JTextArea();
+            chating.setEditable(false);
+            JScrollPane scroll = new JScrollPane(chating);
+            scroll.setBounds(w, h , w * 5, h * 4);
+            con.add(scroll);
+            sendmsg = new JTextArea();
+            sendmsg.setBounds(w, h * 6, w * 5, h * 2);
+            con.add(sendmsg);
+            send_button = new JButton("发送信息");
+            send_button.setBounds(w * 4, h * 8, w * 2, h);
+            send_button.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    String line = "SENDMSG " + (T ? "FRIEND " : "GROUP ") + name + " " + cur_frame.getTitle() + " " + sendmsg.getText();
+                    chating.append(name + ":" + sendmsg.getText() + "\n");
+                    sendmsg.setText("");
+                    send_msg_queue.offer(line);
+                    System.out.println("q:" + send_msg_queue.peek());
+                }
+            });
+            con.add(send_button);
+            cur_frame.setVisible(true);
+        } 
     }
     private static boolean find(Vector<String> s, String v) {
         for (int i = 0; i < s.size(); i++) {
@@ -169,20 +181,20 @@ public class client {
     }
     private static void user_dialog() throws Exception {
         File f_friend = new File(".//" + name + "_friend.txt");
-        BufferedReader bfr1 = new BufferedReader(new InputStreamReader(new FileInputStream(f_friend), "utf-8"));
-        File f_group = new File(".//" + name + "_group.txt");
-        BufferedReader bfr2 = new BufferedReader(new InputStreamReader(new FileInputStream(f_group), "utf-8"));
-        Vector<String> friendlist = new Vector<String>();
-        Vector<String> grouplist = new Vector<String>();
         if (!f_friend.exists()) {
             f_friend.createNewFile();
         }
+        BufferedReader bfr1 = new BufferedReader(new InputStreamReader(new FileInputStream(f_friend), "utf-8"));
+        File f_group = new File(".//" + name + "_group.txt");
+        if (!f_group.exists()) { 
+            f_group.createNewFile();
+        }
+        BufferedReader bfr2 = new BufferedReader(new InputStreamReader(new FileInputStream(f_group), "utf-8"));
+        Vector<String> friendlist = new Vector<String>();
+        Vector<String> grouplist = new Vector<String>();
         for (String rd = bfr1.readLine(); rd != null; rd = bfr1.readLine()) {
             System.out.println("当前好友: " + rd);
             friendlist.add(rd);
-        }
-        if (!f_group.exists()) { 
-            f_group.createNewFile();
         }
         for (String rd = bfr2.readLine(); rd != null; rd = bfr2.readLine()) {
             System.out.println("当前群: " + rd);
@@ -213,6 +225,7 @@ public class client {
                         bfw2.newLine();
                     }
                     bfw2.close();
+                    out.println("QUIT");
                 } catch(Exception ex) {
                     ex.printStackTrace();
                 } 
@@ -225,20 +238,15 @@ public class client {
         user_frame.setLayout(null);
         Container con = user_frame.getContentPane();
         JList<String> list = new JList<String>();
+        list.setPreferredSize(new Dimension(user_frame_w * 8, user_frame_h * 6));
         MouseListener mouselistener = new MouseInputAdapter() {
             public void mouseClicked(MouseEvent e) {
                 String frame_name = list.getSelectedValue();
                 if (frame_name == null || frame_name.equals("")) return;
-                boolean flag = false;
-                for (int i = 0; i < chat_frame.size(); i++) {
-                    if (frame_name == chat_frame.get(i).getTitle()) {
-                        flag = true;
-                        chat_frame.get(i).setVisible(true);
-                        break;
-                    }
-                }
-                if (flag == false) {
-                    chat_frame.add(create_new_chat_frame(frame_name));
+                if (chat_frame.get(frame_name) == null) {
+                    chat_frame.put(frame_name, new chat_dialog(frame_name, T));
+                } else {
+                    chat_frame.get(frame_name).cur_frame.setVisible(true);
                 }
             }   
         };
@@ -254,12 +262,13 @@ public class client {
         add_friend.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 String s = add_name.getText();
-                if (s == null || s.equals("")) {
-                    JOptionPane.showMessageDialog(user_frame, "输入为空", "error", JOptionPane.ERROR_MESSAGE);
+                if (s == null || s.equals("") || s.equals(name)) {
+                    JOptionPane.showMessageDialog(user_frame, "输入为空或为自己", "error", JOptionPane.ERROR_MESSAGE);
                 } else if (find(friendlist, s)) {
                     JOptionPane.showMessageDialog(user_frame, "已添加过该好友", "提示", JOptionPane.ERROR_MESSAGE);    
                 } else {
                     friendlist.add(s);
+                    T = true;
                     list.setListData(friendlist);
                 }
             }
@@ -276,6 +285,8 @@ public class client {
                     JOptionPane.showMessageDialog(user_frame, "已添加过该群", "提示", JOptionPane.ERROR_MESSAGE);    
                 } else {
                     grouplist.add(s);
+                    out.println("ADDGROUP " + s + " " + name);
+                    T = false;
                     list.setListData(grouplist);
                 }
             }
@@ -285,6 +296,7 @@ public class client {
         friend_button.setBounds(user_frame_w * 4, user_frame_h, user_frame_w * 2, user_frame_h);
         friend_button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                T = true;
                 list.setListData(friendlist);
             }
         });
@@ -293,12 +305,13 @@ public class client {
         group_button.setBounds(user_frame_w * 6, user_frame_h, user_frame_w * 2, user_frame_h);
         group_button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                T = false;
                 list.setListData(grouplist);
             }
         });
         con.add(group_button);
-        JScrollPane scroll = new JScrollPane(list);
-        scroll.setBounds(0, user_frame_h * 2, user_frame_w * 8 - 15, user_frame_h * 5);
+        JScrollPane scroll = new JScrollPane(list, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scroll.setBounds(0, user_frame_h * 2, user_frame_w * 8 - 11, user_frame_h * 5);
         con.add(scroll);
         user_frame.setVisible(true);
     }
@@ -343,7 +356,26 @@ public class client {
                 String line = in.nextLine();
                 if (line != null) {
                     System.out.println("有新的信息收到: " + line);
-                    get_msg_queue.offer(line);
+                    //get_msg_queue.offer(line);
+                    if (line.startsWith("RETMSG")) {
+                        if (line.substring(7).startsWith("FRIEND")) {
+                            String s = line.substring(14);
+                            String ss[] = s.split(" ", 2);
+                            if (chat_frame.get(ss[0]) == null) {
+                                chat_frame.put(ss[0], new chat_dialog(ss[0], true));
+                            }
+                            chat_frame.get(ss[0]).chating.append(ss[0] + ":" + ss[1] + "\n");
+                        } else if (line.substring(7).startsWith("GROUP")) {
+                            String s = line.substring(13);
+                            String ss[] = s.split(" ", 3);
+                            if (chat_frame.get(ss[0]) == null) {
+                                chat_frame.put(ss[0], new chat_dialog(ss[0], false));
+                            }
+                            chat_frame.get(ss[0]).chating.append(ss[1] + ":" + ss[2] + "\n");
+                        } else {
+                            
+                        }
+                    }
                 }
             }
         }

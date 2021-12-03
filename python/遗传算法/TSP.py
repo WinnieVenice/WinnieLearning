@@ -31,25 +31,24 @@ def choice(pop, num, n, x, y, b):
     # 上一代的最优值替代本代中的最差值
     pop[c] = b
     return pop
-def drawPic(maxFitness,x_position,y_position,i):
+def drawPic(maxFitness,pos_x,pos_y,i):
     index = np.array(maxFitness[:-1],dtype=np.int32)    #去掉向量最后一个元素
-    x = np.append(x_position[index],x_position[[index[0]]])
-    y = np.append(y_position[index],y_position[[index[0]]])
+    x = np.append(pos_x[index],pos_x[[index[0]]])
+    y = np.append(pos_y[index],pos_y[[index[0]]])
     fig = plt.figure()
     plt.plot(x,y,'-o')
     plt.xlabel('x',fontsize = 16)
     plt.ylabel('y',fontsize = 16)
     plt.title('{iter}'.format(iter=i))
     plt.show()
-def matuingFuction(pop, pc, n, pm, num):
-    mating_matrix = np.array(1 - (np.random.rand(num) > pc), dtype=np.bool)  # 交配矩阵，如果为true则进行交配
-    a = list(pop[mating_matrix][:, :-1])  # 进行交配的个体
-    b = list(pop[np.array(1 - mating_matrix, dtype=bool)][:, :-1])  # 未进行交配的个体,直接放到下一代
+def matching(pop, pc, n, pm, num):
+    match_matrix = np.array(1 - (np.random.rand(num) > pc), dtype=np.bool)  # 交配矩阵，如果为true则进行交配
+    a = list(pop[match_matrix][:, :-1])  # 进行交配的个体
+    b = list(pop[np.array(1 - match_matrix, dtype=bool)][:, :-1])  # 未进行交配的个体,直接放到下一代
     b = [list(i) for i in b]  # 对b进行类型转换，避免下面numpy.array 没有index属性
     #     print(a)
     if len(a) % 2 != 0:
         b.append(a.pop())
-    # print('ab的长度：',len(a),len(b))
     for i in range(int(len(a) / 2)):
         # 随机初始化两个交配点,这里写得不好，这边的两个点初始化都是一个在中间位置偏左，一个在中间位置偏右
         p1 = np.random.randint(1, int(n / 2) + 1)
@@ -58,8 +57,8 @@ def matuingFuction(pop, pc, n, pm, num):
         x2 = list(a.pop())
         matuting(x1, x2, p1, p2)
         # 交配之后产生的个体进行一定概率上的变异
-        variationFunction(x1, pm, n)
-        variationFunction(x2, pm, n)
+        variation(x1, pm, n)
+        variation(x2, pm, n)
         b.append(x1)
         b.append(x2)
     zero = np.zeros((num, 1))
@@ -116,7 +115,7 @@ def matuting(x1, x2, p1, p2):
         if np.intersect1d(x2[p2:], center2).size == 0:  # 如果不存在交集，则循环结束
             break
         
-def variationFunction(list_a, pm, n):
+def variation(list_a, pm, n):
     '''变异函数'''
     if np.random.rand() < pm:
         p1 = np.random.randint(1, int(n / 2) + 1)
@@ -131,7 +130,7 @@ def findDistance(pop):
     for temp in pop:
             sum += 1/temp[-1]
     return sum
-def main():
+if __name__ == '__main__':
     Gen = []  # 代数
     dist = []  # 每一代的最优距离
     # 初始化
@@ -140,10 +139,10 @@ def main():
     n = 10  # 城市数目
     pc = 0.9  # 每个个体的交配概率
     pm = 0.2  # 每个个体的变异概率
-    x_position = np.random.randint(0, 100, size=n)
-    y_position = np.random.randint(0, 100, size=n)
-    x = np.append(x_position, x_position[0])
-    y = np.append(y_position, y_position[0])
+    pos_x = np.random.randint(0, 100, size=n)
+    pos_y = np.random.randint(0, 100, size=n)
+    x = np.append(pos_x, pos_x[0])
+    y = np.append(pos_y, pos_y[0])
     for i in range(num):
         pop.append(np.random.permutation(np.arange(0, n)))  # 假设有10个城市，初始群体的数目为250个
         # 初始化化一个60*1的拼接矩阵，值为0
@@ -162,11 +161,9 @@ def main():
             print("-----------------------")
             Gen.append(i+1)
             dist.append(distance)
-            #drawPic(b, x_position, y_position, i + 1)  # 根据本代中的适应度最大的个体画图
-        pop_temp = matuingFuction(pop, pc, n, pm, num)  # 交配变异
+            #drawPic(b, pos_x, pos_y, i + 1)  # 根据本代中的适应度最大的个体画图
+        pop_temp = matching(pop, pc, n, pm, num)  # 交配变异
         pop = choice(pop_temp, num, n, x, y, b)
     # 绘制进化曲线
     plt.plot(Gen, dist, '-r')
     plt.show()
-main()
-if __main__ == 

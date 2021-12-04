@@ -16,22 +16,21 @@ def f(pop, num, n, x, y):
             square_sum += dis(x, y, pop[x1][x2], pop[x1][x2 + 1])
         # print(round(1/np.sqrt(square_sum),7))
         pop[x1][-1] = round(1/np.sqrt(square_sum),7)
-def choiceFuction(pop):
+def get_min_max(pop):
     '''
     这里的做法：比如A当前种群中的最优解，B为经过交叉、变异后的最差解，把A作为最当前代中的最优解保存下来作为这一代的最优解，同时A也参与交叉
     和变异。经过交叉、变异后的最差解为B，那么我再用A替代B。
     :argument pop矩阵
     :return 本代适应度最低的个体的索引值和本代适应度最高的个体
     '''
-    yield np.argmin(pop[:, -1])
-    yield pop[np.argmax(pop[:, -1])]
+    return [np.argmin(pop[:, -1]), pop[np.argmax(pop[:, -1])]]
 def choice(pop, num, n, x, y, b):
     f(pop,num,n,x,y)
-    c,d =choiceFuction(pop)
+    c, d = get_min_max(pop)
     # 上一代的最优值替代本代中的最差值
     pop[c] = b
     return pop
-def drawPic(maxFitness,pos_x,pos_y,i):
+def draw(maxFitness,pos_x,pos_y,i):
     index = np.array(maxFitness[:-1],dtype=np.int32)    #去掉向量最后一个元素
     x = np.append(pos_x[index],pos_x[[index[0]]])
     y = np.append(pos_y[index],pos_y[[index[0]]])
@@ -66,53 +65,48 @@ def matching(pop, pc, n, pm, num):
     temp = np.column_stack((b, zero))
     return temp
 
-
 def matuting(x1, x2, p1, p2):
     # 以下进行交配
     # 左边交换位置
-    temp = x1[:p1]
-    x1[:p1] = x2[:p1]
-    x2[:p1] = temp
+    x1[:p1], x2[:p1] = x2[:p1], x1[:p1]
     # 右边交换位置
-    temp = x1[p2:]
-    x1[p2:] = x2[p2:]
-    x2[p2:] = temp
+    x1[:p2], x2[:p2] = x2[:p2], x1[:p2]
     # 寻找重复的元素
-    center1 = x1[p1:p2]
-    center2 = x2[p1:p2]
+    c1 = x1[p1:p2]
+    c2 = x2[p1:p2]
     while True:  # x1左边
         for i in x1[:p1]:
-            if i in center1:
-                # print(center1.index(i)) # 根据值找到索引
-                x1[x1[:p1].index(i)] = center2[center1.index(i)]
+            if i in c1:
+                # print(c1.index(i)) # 根据值找到索引
+                x1[x1[:p1].index(i)] = c2[c1.index(i)]
                 break
-        if np.intersect1d(x1[:p1], center1).size == 0:  # 如果不存在交集，则循环结束
+        if np.intersect1d(x1[:p1], c1).size == 0:  # 如果不存在交集，则循环结束
             break
     while True:  # x1右边
         for i in x1[p2:]:
-            if i in center1:
-                # print(center1.index(i)) # 根据值找到索引
-                x1[x1[p2:].index(i) + p2] = center2[center1.index(i)]
+            if i in c1:
+                # print(c1.index(i)) # 根据值找到索引
+                x1[x1[p2:].index(i) + p2] = c2[c1.index(i)]
                 # print(x1)
                 break
-        if np.intersect1d(x1[p2:], center1).size == 0:  # 如果不存在交集，则循环结束
+        if np.intersect1d(x1[p2:], c1).size == 0:  # 如果不存在交集，则循环结束
             break
     while True:  # x2左边
         for i in x2[:p1]:
-            if i in center2:
-                #                     print(center2.index(i)) # 根据值找到索引
-                x2[x2[:p1].index(i)] = center1[center2.index(i)]
+            if i in c2:
+                #                     print(c2.index(i)) # 根据值找到索引
+                x2[x2[:p1].index(i)] = c1[c2.index(i)]
                 break
-        if np.intersect1d(x2[:p1], center2).size == 0:  # 如果不存在交集，则循环结束
+        if np.intersect1d(x2[:p1], c2).size == 0:  # 如果不存在交集，则循环结束
             break
     while True:  # x2右边
         for i in x2[p2:]:
-            if i in center2:
-                # print(center2.index(i)) # 根据值找到索引
-                x2[x2[p2:].index(i) + p2] = center1[center2.index(i)]
+            if i in c2:
+                # print(c2.index(i)) # 根据值找到索引
+                x2[x2[p2:].index(i) + p2] = c1[c2.index(i)]
                 # print(x2)
                 break
-        if np.intersect1d(x2[p2:], center2).size == 0:  # 如果不存在交集，则循环结束
+        if np.intersect1d(x2[p2:], c2).size == 0:  # 如果不存在交集，则循环结束
             break
         
 def variation(list_a, pm, n):
@@ -126,9 +120,9 @@ def variation(list_a, pm, n):
         list_a[p1:p2] = temp
 # print(list_a)
 def findDistance(pop):
-    sum=0
-    for temp in pop:
-            sum += 1/temp[-1]
+    sum = 0
+    for p in pop:
+            sum += 1 / p[-1]
     return sum
 if __name__ == '__main__':
     Gen = []  # 代数
@@ -150,7 +144,7 @@ if __name__ == '__main__':
     pop = np.column_stack((pop, zero))  # 矩阵的拼接
     f(pop, num, n, x, y)
     for i in range(180):
-        a, b = choiceFuction(pop)  # a 为当代适应度最小的个体的索引，b为当代适应度最大的个体,这边要保留的是b
+        a, b = get_min_max(pop) # a 为当代适应度最小的个体的索引，b为当代适应度最大的个体,这边要保留的是b
         # pop[a]=b
         # print(x," ",y)
         if (i + 1) % 10 == 0:
@@ -161,7 +155,7 @@ if __name__ == '__main__':
             print("-----------------------")
             Gen.append(i+1)
             dist.append(distance)
-            #drawPic(b, pos_x, pos_y, i + 1)  # 根据本代中的适应度最大的个体画图
+            #draw(b, pos_x, pos_y, i + 1)  # 根据本代中的适应度最大的个体画图
         pop_temp = matching(pop, pc, n, pm, num)  # 交配变异
         pop = choice(pop_temp, num, n, x, y, b)
     # 绘制进化曲线

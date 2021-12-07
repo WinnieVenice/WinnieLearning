@@ -134,3 +134,10 @@ https://blog.csdn.net/u010579068/article/details/49207691
 
 ## 拓展域并查集
 
+
+
+## 欧拉路
+
+https://blog.csdn.net/shahdza/article/details/6630108
+
+https://zhuanlan.zhihu.com/p/112013386

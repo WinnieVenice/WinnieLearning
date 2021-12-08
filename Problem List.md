@@ -141,3 +141,9 @@ https://blog.csdn.net/u010579068/article/details/49207691
 https://blog.csdn.net/shahdza/article/details/6630108
 
 https://zhuanlan.zhihu.com/p/112013386
+
+## 快速枚举约数
+
+https://www.cnblogs.com/zhuohan123/p/3857459.html
+
+https://www.cnblogs.com/DReamLion/p/14364915.html

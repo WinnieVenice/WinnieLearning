@@ -147,3 +147,7 @@ https://zhuanlan.zhihu.com/p/112013386
 https://www.cnblogs.com/zhuohan123/p/3857459.html
 
 https://www.cnblogs.com/DReamLion/p/14364915.html
+
+## 状态机dp+线段树
+
+https://codeforces.com/contest/1609/problem/E

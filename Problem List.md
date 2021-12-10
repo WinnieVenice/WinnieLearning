@@ -151,3 +151,15 @@ https://www.cnblogs.com/DReamLion/p/14364915.html
 ## 状态机dp+线段树
 
 https://codeforces.com/contest/1609/problem/E
+
+## 背包dp
+
+https://codeforces.com/gym/103446/problem/I
+
+## 数位dp
+
+https://zhuanlan.zhihu.com/p/442816931?utm_source=qq&utm_medium=social&utm_oi=875519172669497344
+
+## 换根dp
+
+https://www.luogu.com.cn/blog/sflsrick/note-how-to-change-root

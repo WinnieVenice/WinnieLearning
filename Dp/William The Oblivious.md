@@ -94,5 +94,68 @@ signed main() {
 
 最小修改代价显然能够类似于floyd算法求:枚举起点状态i和最终到达状态j,再枚举中间转移的状态k来求得从i$\rightarrow$j的最小代价，即：$f_{cur}(i\rightarrow j)\leftarrow min\{f_l(i\rightarrow k)+f_r(k\rightarrow j)\}$
 
-单点更新的时候即是加一条边权为1的边，例如：$f(b\rightarrow bc)=1$
+单点更新的时候初始化状态机:$f(i\rightarrow i)=0,f(i\rightarrow i_{next})=1$,f(其他)=inf
+
+对当前修改的字符c来说,最小修改代价即:$f(c\rightarrow c)=1,f(c\rightarrow c+1)=0$
+
+```C++
+#include<bits/stdc++.h>
+#define LL __int128
+#define endl '\n'
+#define int long long 
+using namespace std;
+typedef long long ll;
+typedef unsigned long long ull;
+ll gcd(ll x,ll y){return y?gcd(y,x%y):x;}
+ll lcm(ll x,ll y){return x/gcd(x,y)*y;}
+ll qpow(ll a,ll b,ll p){a%=p; ll ret=1;for(;b;b>>=1,a=a*a%p) if(b&1) ret=ret*a%p; return ret;}
+ll qpow(ll a,ll b){ll ret=1; for(;b;b>>=1,a*=a) if(b&1) ret*=a; return ret;}
+ll getInv(ll x,ll p){return qpow(x,p-2,p);}
+const int inf = 1e9;
+const int N = 5 + 1e5;
+int n, q;
+string s; 
+int f[N << 2][5][5];
+void poll(int x) {
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            f[x][i][j] = inf;
+        }
+    }
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            for (int k = i; k <= j; k++) {
+                f[x][i][j] = min(f[x][i][j], f[x << 1][i][k] + f[x << 1| 1][k][j]);
+            }
+        }
+    }
+}
+void upd(int x, int l, int r, int p, int c) {
+    if (l == r) {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                f[x][i][j] = inf;
+                if (i == j) f[x][i][j] = 0;
+                if (i + 1 == j) f[x][i][j] = 1;
+            }
+        }
+        f[x][c][c] = 1; 
+        f[x][c][c + 1] = 0;
+        return;
+    }
+    int mid = l + r >> 1;
+    if (p <= mid) upd(x << 1, l, mid, p, c);
+    else upd(x << 1| 1, mid + 1, r, p, c);
+    poll(x);
+}
+signed main(){
+    cin >> n >> q >> s; s = ' ' + s;
+    for (int i = 1; i <= n; i++) upd(1, 1, n, i, s[i] - 'a');
+    while (q--) {
+        int p; char c; cin >> p >> c;
+        upd(1, 1, n, p, c - 'a');
+        cout << min({f[1][0][0], f[1][0][1], f[1][0][2]}) << endl;
+    }
+}
+```
 

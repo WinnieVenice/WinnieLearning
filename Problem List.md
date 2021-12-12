@@ -191,3 +191,7 @@ https://codeforces.com/contest/1608/problem/B
 ## 组合数学
 
 https://codeforces.com/contest/1608/problem/D
+
+## ST表
+
+https://leetcode-cn.com/problems/sum-of-subarray-ranges/

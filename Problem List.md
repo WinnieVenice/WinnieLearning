@@ -160,6 +160,34 @@ https://codeforces.com/gym/103446/problem/I
 
 https://zhuanlan.zhihu.com/p/442816931?utm_source=qq&utm_medium=social&utm_oi=875519172669497344
 
+https://blog.csdn.net/lianqi15571/article/details/8877014
+
 ## 换根dp
 
 https://www.luogu.com.cn/blog/sflsrick/note-how-to-change-root
+
+https://ac.nowcoder.com/acm/contest/11183/C
+
+## 矩阵欧拉降幂
+
+https://www.zhihu.com/question/35758656/answer/1275588008
+
+## tarjan
+
+
+
+## bfs
+
+http://172.22.27.1/problem?pid=1658
+
+## dfs
+
+https://codeforces.com/contest/1608/problem/C
+
+## 构造
+
+https://codeforces.com/contest/1608/problem/B
+
+## 组合数学
+
+https://codeforces.com/contest/1608/problem/D

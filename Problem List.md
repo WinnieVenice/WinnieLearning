@@ -195,3 +195,5 @@ https://codeforces.com/contest/1608/problem/D
 ## ST表
 
 https://leetcode-cn.com/problems/sum-of-subarray-ranges/
+
+https://www.luogu.com.cn/blog/zhouziheng666/qian-tan-st-biao

@@ -234,7 +234,7 @@ public class client {
                         bfw2.newLine();
                     }
                     bfw2.close();
-                    print("QUIT");
+                    print("QUIT " + name);
                     //out.println("QUIT");
                 } catch(Exception ex) {
                     ex.printStackTrace();
@@ -390,8 +390,6 @@ public class client {
                                     chat_frame.put(ss[0], new chat_dialog(ss[0], false));
                                 }
                                 chat_frame.get(ss[0]).chating.append(ss[1] + ":" + ss[2] + "\n");
-                            } else {
-                                
                             }
                         }
                     }

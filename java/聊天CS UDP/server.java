@@ -46,7 +46,6 @@ public class server {
     }
     public static void print(String s, String cur_people) throws Exception{
         byte[] buff = s.getBytes();
-        System.out.println(InetAddress.getByName(cur_people.split("#")[0]));
         DatagramPacket cur_packet = new DatagramPacket(buff, buff.length, InetAddress.getByName(cur_people.split("#")[0]), Integer.parseInt(cur_people.split("#")[1]));
         server.send(cur_packet);
     }
@@ -168,7 +167,6 @@ public class server {
                                 //out.println("RETCHECKUSER TRUE");
                             } else if (users.get(name).equals(pwd)) {
                                 show.append("用户: " + name + " 密码正确\n");
-                                System.out.println(cur_ip.toString());
                                 online_users.put(name, cur_ip_string + "#" + Integer.toString(cur_port));
                                 print("RETCHECKUSER TRUE", cur_ip, cur_port);
                                 //out.println("RETCHECKUSER TRUE");
@@ -214,11 +212,15 @@ public class server {
                                 //online_users.get(x).println(msg);
                             }
                         }
-                    } else if (line.equals("QUIT")) {
+                    } else if (line.startsWith("QUIT")) {
+                        line = line.substring(5);
+                        name = line;
                         show.append(name + "下线了\n");
-                        if (online_users.get(name) != null && flag) {
+                        System.out.println(online_users.get(name));
+                        if (online_users.get(name) != null) {
                             online_users.remove(name);
                         }
+                        System.out.println(online_users.get(name));
                         for (String x : online_users.keySet()) {
                             //System.out.println("当前在线用户: " + x);
                             show.append("当前剩余在线用户: " + x + "\n");

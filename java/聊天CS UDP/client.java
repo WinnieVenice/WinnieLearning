@@ -44,6 +44,7 @@ public class client {
     static boolean T;
     String chat_name;
     static DatagramSocket soc;
+    public final static int SLEEP_TIME = 5000;
     public static void print(String s){
         try {
             byte[] buff = s.getBytes();
@@ -130,7 +131,7 @@ public class client {
         try {
             System.out.println("ip: " + ip + ", port: " + port);
             soc = new DatagramSocket();
-
+            soc.setSoTimeout(SLEEP_TIME);
             if (REQUEST_check_user() == false) {
                 JOptionPane.showMessageDialog(user_frame, "登陆失败", "error", JOptionPane.ERROR_MESSAGE);
                 return false;
@@ -332,19 +333,17 @@ public class client {
             System.out.println("发送登录请求");
             byte[] buff = new byte[MAX_PACKET_SIZE];
             DatagramPacket tmp = new DatagramPacket(buff, buff.length);
-            while (true) {
-                soc.receive(tmp);
-                String line = new String(tmp.getData(), 0, tmp.getLength(), "UTF-8");
-                System.out.println("ss:" + line);
-                if (line.startsWith("RETCHECKUSER")) {
-                    System.out.println(line);
-                    if (line.substring(13).equals("TRUE")) {
-                        return true;
-                    } else {
-                        return false;
-                    }
+            soc.receive(tmp);
+            String line = new String(tmp.getData(), 0, tmp.getLength(), "UTF-8");
+            if (line.startsWith("RETCHECKUSER")) {
+                System.out.println(line);
+                if (line.substring(13).equals("TRUE")) {
+                    return true;
+                } else {
+                    return false;
                 }
             }
+            return false;
         } catch (Exception ex) {
             ex.printStackTrace();
             return false;

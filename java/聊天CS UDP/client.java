@@ -44,7 +44,6 @@ public class client {
     static boolean T;
     String chat_name;
     static DatagramSocket soc;
-    public final static int SLEEP_TIME = 5000;
     public static void print(String s){
         try {
             byte[] buff = s.getBytes();
@@ -131,7 +130,6 @@ public class client {
         try {
             System.out.println("ip: " + ip + ", port: " + port);
             soc = new DatagramSocket();
-            soc.setSoTimeout(SLEEP_TIME);
             if (REQUEST_check_user() == false) {
                 JOptionPane.showMessageDialog(user_frame, "登陆失败", "error", JOptionPane.ERROR_MESSAGE);
                 return false;

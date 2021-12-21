@@ -188,6 +188,10 @@ https://codeforces.com/contest/1608/problem/C
 
 https://codeforces.com/contest/1608/problem/B
 
+https://codeforces.com/contest/1617/problem/D1
+
+https://codeforces.com/contest/1617/problem/D2
+
 ## 组合数学
 
 https://codeforces.com/contest/1608/problem/D
@@ -197,3 +201,7 @@ https://codeforces.com/contest/1608/problem/D
 https://leetcode-cn.com/problems/sum-of-subarray-ranges/
 
 https://www.luogu.com.cn/blog/zhouziheng666/qian-tan-st-biao
+
+## 模型转换-建图
+
+https://codeforces.com/contest/1617/problem/E

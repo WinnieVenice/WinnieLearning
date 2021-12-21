@@ -24,6 +24,28 @@ mv [options] source dest	将source移动到dest，options是具体移动操作�
 
 .	当前目录
 
+env	显示当前用户的环境变量	
+
+export [-f/-n/-p] [name] = [val]	设置或显示环境变量name的值为val，可以新增、修改、删除环境变量。-f 代表[name]中为函数名称；-n 删除指定的变量（实际上并未删除，只是不输出到后续值令的执行环境中）；-p 列出所有shell赋予程序的环境变量。这种方式事实上不会真的修改，只是会改变当前终端的后续执行环境。
+
+$name	获取变量name或环境变量name的值
+
+pwd	（print work directory）用于显示工作目录，得到当前所在目录的绝对路径名称
+
+echo xxx	将xxx打印显示出来，xxx可以是变量
+
+source filename	在当前bash环境下读取并执行filename中的命令（也可以使用 . filename ）
+
+cd ~	家目录
+
+## 编辑操作
+
+shift + g	下拉到最下面
+
+o	插入
+
+wq	保存并退出
+
 
 
 # GCC操作
@@ -62,6 +84,30 @@ mv [options] source dest	将source移动到dest，options是具体移动操作�
 
 # 库
 
+## 工作原理
+
+静态库：gcc进行链接时，会把静态库中代码打包到可执行程序中
+
+动态库：gcc进行链接时，动态库的代码不会被打包到可执行程序中
+
+程序启动之后，动态库会被动态加载到内存中，通过ldd（list dynamic dependencies）命令检查动态库依赖关系
+
+Linux定位共享库文件：当系统加载可执行代码时，能够知道其所依赖的库的文件，但是还需要知道绝对路径。此时需要系统的动态载入器来获取该绝对路径。对于elf格式的可执行程序，是由ld-linux.so来完成的，它先后搜索elf文件的DT_RPATH段->环境变量LD_LIBRARY_PATH->/etc/ld.so.cache文件列表->/lib/,/usr/lib目录找到库文件后将其载入内存（不建议使用最后一种方法，因为预置了系统的库文件）
+
+### 修改环境变量的方法
+
+不同目录之间用 : 分隔开
+
+方法一（终端级）：修改当前bash（终端）的环境变量，直接在当前bash中export环境变量
+
+方法二（用户级）：在用户根目录的隐藏文件.bashrc中修改环境变量，在根目录的.bashrc中export环境变量，然后source生效export指令
+
+方法三（系统级）：在系统/etc/profile文件中修改环境变量，export然后再source
+
+### 修改/etc/ld.so.cache
+
+无法直接修改，间接修改通过/etc/ld.so.conf，直接在里面添加环境变量的路径，然后ldconfig。（都在sudo下执行）
+
 ## 静态库和动态库的区别
 
 静态库在程序的链接阶段被复制到了程序中；动态库在链接阶段没有被复制到程序中，而实程序在运行时由系统动态加载到内存中供程序调用。
@@ -72,7 +118,7 @@ mv [options] source dest	将source移动到dest，options是具体移动操作�
 
 2、方便部署和分发
 
-## 静态库的制作和
+## 静态库的制作和使用
 
 ### 命名规则
 
@@ -97,6 +143,30 @@ c - 建立备存文件
 s - 索引
 
 ### 静态库的使用
+
+在程序的源代码中inclue 头文件和调用里面的函数/变量
+
+编译的时候要指定头文件目录和库文件目录
+
+## 动态库（共享库）的制作和使用
+
+### 命名规则
+
+Linux：libxxx.so	lib：固定前缀	xxx：库的名字	.so：固定后缀	在linux下是一个可执行文件
+
+Windows：libxxx.dll
+
+### 动态库的制作
+
+步骤一：gcc/g++ 编译得到.o文件，得到和位置无关的代码	
+
+gcc -c -fpic/-fPIC xxx.c xxx.c
+
+步骤二：gcc得到动态库
+
+gcc -shared xxx.o xxx.o -o libxxx.so
+
+### 动态库的使用
 
 在程序的源代码中inclue 头文件和调用里面的函数/变量
 

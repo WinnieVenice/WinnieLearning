@@ -205,3 +205,11 @@ https://www.luogu.com.cn/blog/zhouziheng666/qian-tan-st-biao
 ## 模型转换-建图
 
 https://codeforces.com/contest/1617/problem/E
+
+## fft
+
+https://codeforces.com/gym/103119/problem/A
+
+## 异或最小生成树
+
+https://codeforces.com/gym/103119/problem/C

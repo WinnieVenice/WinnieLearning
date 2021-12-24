@@ -24,6 +24,10 @@ https://ac.nowcoder.com/acm/contest/10272/F   三分
 
 https://codeforces.ml/gym/102769/problem/K 树形dp
 
+https://codeforces.com/contest/1615/problem/E
+
+https://blog.csdn.net/starlet_kiss/article/details/101163494
+
 ## PN筛
 
 https://www.cnblogs.com/clockwhite/p/14453866.html
@@ -212,4 +216,4 @@ https://codeforces.com/gym/103119/problem/A
 
 ## 异或最小生成树
 
-https://codeforces.com/gym/103119/problem/C
+https://codeforces.com/gym/103119/problem/Chttps://codeforces.com/contest/1615/problem/E

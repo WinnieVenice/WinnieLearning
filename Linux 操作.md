@@ -8,6 +8,8 @@ mkdir dir	创建目录dir
 
 vim name	打开文件name
 
+set nu 显示行号（在文件内使用）
+
 touch name	创建文件name
 
 rm name	删除文件name
@@ -207,4 +209,331 @@ gcc -shared xxx.o xxx.o -o libxxx.so
   加载速度比静态库慢
 
   发布程序时需要提供依赖的动态库
+
+# Makefile
+
+一个工程中的源文件不计其数，其按类型、功能、模块分别放在若干个目录中，Makefile文件定义了一系列的规则来指定哪些文件需要先编译，哪些文件需要后编译，哪些文件需要重新编译，甚至于进行更复杂的功能操作，因为Makefile文件像一个shell脚本一样，也可以执行操作系统的命令。
+
+## 好处
+
+自动化编译。Makefile一旦写好，只需要一个make命令，整个工程完全自动编译，极大的提高了软件开发的效率。make是一个命令工具，是一个解释Makefile文件中指令的命令工具，一般来说大多数IDE都要这个命令。（Visual C++ : nmake；Linux GNU：make）
+
+## 编写
+
+### 文件命名
+
+makefile 或者Makefile
+
+### 规则
+
+-   一个Makefile文件中可以有一个或者多个规则
+
+    目标…: 依赖…
+
+    ​		命令(shell命令)
+
+    ​		…
+
+    （目标：最终要生成的文件（伪目标除外）；依赖：生成目标所需要的文件或是目标；命令：通过执行命令对依赖操作生成目标（命令前必须tab缩进））
+
+-   其他规则一般都是为第一条规则服务
+
+## 工作原理
+
+-   命令在执行之前，需要检查规则中的依赖是否存在
+
+    如果存在，执行命令
+
+    如果不存在，向下检查其他规则，检查有没有一个规则是用来生成这个依赖的，如果找到了，则执行该规则中的命令
+
+-   检测更新，在执行规则中的命令时，会比较目标和依赖文件的时间
+
+    如果依赖的时间比目标的时间晚，需要重新生成目标
+
+    如果依赖的时间比目标的时间早，目标不需要更新，对应规则中的命令不需要被执行
+
+## 变量
+
+-   自定义变量
+
+    变量名 = 变量值
+
+-   预定义变量
+
+    AR ：归档维护程序的名称，默认值为 ar
+
+    CC ：C编译器的名称，默认值为 cc
+
+    CXX ：C++编译器名称，默认值为 g++
+
+    $自动变量(只能在规则的命令中使用)\begin{cases}\ \$@ ：目标的完整名称 \\ \$< ：第一个依赖文件的名称\\ \$^ ：所有的依赖文件 \end{cases}$
+
+-   获取变量的值
+
+    $(变量名)
+
+## 模式匹配
+
+%：通配符，匹配一个字符串
+
+两个%匹配的是同一个字符串
+
+## 函数
+
+格式：
+
+$(函数名 函数参数…)
+
+例如：
+
+-   $(wildcard PATTERN…)
+
+    功能：获取指定目录下指定类型的文件列表
+
+    参数：PATTERN指的是某个或多个目录下的对应的某种类型的文件，如果有多个目录，一般使用空格间隔
+
+    返回：得到的若干个文件的列表，文件名之间使用空格间隔
+
+    示例：
+
+    $(wildcard \*.c ./sub/\*.c)
+
+    返回格式：a.c b.c c.c d.c e.c f.c
+
+-   $(patsubst \<pattern\>, \<replacement\>,\<text\>)
+
+    功能：查找\<text\>中的单词（单词以“空格”、“tab”或“回车””换行“分隔）是否符合模式\<pattern\>，如果匹配，则以\<replacement\>替换
+
+    \<pattern\>可以包括通配符’%‘，表示任意长度的字符串。如果\<replacement\>中也包含‘%’，那么，\<replacement\>中的这个‘%’将是\<pattern\>中的那个%所代表的字符串。（可以用‘\’来转义，来表示真实含义的‘%’字符)
+
+    返回：函数返回被替换过后的字符串
+
+    示例：
+
+    $(patsubst %.c, %.o, x.c bar.c)
+
+    返回值格式：x.o bar.o
+
+## 伪目标
+
+当不需要生成目标文件时，可将目标文件变成伪目标即可
+
+格式：
+
+.PHONY: 目标
+
+# GDB调试
+
+## GDB
+
+GDB是由GNU软件系统社区提供的调试工具，同GCC配套组成了一套完整的开发环境，GDB是Linux和许多类Unix系统中的标准开发环境
+
+## 功能
+
+1.启动程序，可以按照自定义的要求运行程序
+
+2.可让被调试的程序在所指定的调置的断点处停住（断点可以是条件表达式）
+
+3.当程序被停住时，可以检查此时程序中所发生的事
+
+4.可以改变程序，将一个bug产生的影响修成从而测试其他bug
+
+## 准备工作
+
+通常，在为调试而编译时，我们会关掉编译器的优化选项（‘-o’），并打开调试选项（’-g’）。另外，
+
+‘-wall’在尽量不影响程序行为的情况下选项打开所有warning，也可以发现许多问题，避免不必要的bug。
+
+示例：
+
+gcc -g -Wall progam.c -o progam
+
+‘-g’选项的作用是在可执行文件中加入源代码的信息，比如可执行文件中第几条机器指令对应源代码的第几行，但并不是把整个源文件嵌入到可执行文件中，所以在调试时必须保证gdb能找到源文件
+
+## GDB 命令
+
+-   启动和退出
+
+    gdb 可执行程序
+
+    quit
+
+-   给程序设置参数/获取设置参数
+
+    set args 10 20
+
+    show args
+
+-   查看当前文件代码
+
+    list/l (从默认位置显示)
+
+    list/l 行号 (从指定的行显示)
+
+    list/l 函数名 (从指定的函数显示)
+
+-   查看非当前文件代码
+
+    list/l 文件名：行号
+
+    list/l 文件名：函数名
+
+-   设置显示的行数
+
+    show list/listsize
+
+    set list/listsize 行数
+
+-   gdb使用帮助
+
+    help
+
+-   设置断点
+
+    b/break 行号
+    b/break 函数名
+
+    b/break 文件名：行号
+
+    b/break 文件名：函数
+
+-   查看断点
+
+    i/info b/break
+
+-   删除断点
+
+    d/del/delete 断点编号
+
+-   设置断点无效
+
+    dis/disable 断点编号
+
+-   设置断点生效
+
+    ena/enable 断点编号
+
+-   设置条件断点（一般用在循环的位置）
+
+    b/break 断点编号 条件
+
+    示例：
+
+    b/break 10 if i == 5
+
+-   运行GDB程序
+
+    start（程序停在第一行）
+
+    run（遇到断点才停）
+
+-   继续运行，到下一个断电停
+
+    c/continue
+
+-   向下执行一行代码（不会进入函数体）
+
+    n/next
+
+-   变量操作
+
+    p/print 变量名（打印变量值）
+
+    ptype 变量名（打印变量类型）
+
+-   向下单步调试（遇到函数进入函数体）
+
+    s/step
+
+    finish(跳出函数体)
+
+-   自动变量操作
+
+    display num（自动打印指定变量的值）
+
+    i/info display 
+
+    undisplay 编号
+
+-   其他操作
+
+    set var 变量名=变量值
+
+    until（跳出循环）
+
+# C函数
+
+## 文件属性操作函数
+
+-   int access(const char *pathname, int mode)
+
+    判断文件权限或文件是否存在
+
+-   int chmod(const char *filename, int mode)
+
+    修改文件权限
+
+-   int chown(const char *path, uid_t owner, gid_t group)
+
+    修改文件的所有者或者所在组
+
+-   int truncate(const char *path, off_t length)
+
+    缩减或拓展文件的大小
+
+## 目录操作函数
+
+-   int mkdir(const char *pathname, mode_t mode)
+
+    创建目录
+
+-   int rmdir(const char *pathname)
+
+    删除空目录
+
+-   int rename(const char *oldpath, const char *newpath)
+
+    重命名目录
+
+-   int chdir(const char *path)
+
+    修改当前目录的当前路径
+
+-   char *getcwd(char *buf, size_t size)
+
+    获取当前的路径
+
+## 目录遍历函数
+
+-   DIR *opendir(const char *name)
+
+    打开目录
+
+-   struct dirent *readdir(DIR *dirp)
+
+    读取目录
+
+-   int closedir(DIR *dirp)
+
+    关闭目录
+
+## 文件操作符相关函数
+
+-   int dup(int oldfd)
+
+    复制文件描述符
+
+-   int dup2(int oldfd, int newfd)
+
+    重定向文件描述符，即：将newfd重定向至oldfd的指向，该函数的返回值与newfd相同
+
+-   int fcntl(int fd, int cmd, …/\*arg\*/)
+
+    复制文件描述符
+
+    设置/获取文件的状态标志
+
+    cmd：该函数内定义的一些命令宏
+
+    …：可选参数
 

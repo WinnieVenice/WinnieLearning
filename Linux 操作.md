@@ -1,44 +1,90 @@
 # Linux 操作
 
-ls	显示当前目录列表
+## 基础指令
 
-cd dir	到达目录dir
+-   (指令) &
 
-mkdir dir	创建目录dir
+    在后台运行
 
-vim name	打开文件name
+-   ls	
 
-set nu 显示行号（在文件内使用）
+    显示当前目录列表
 
-touch name	创建文件name
+-   cd dir	
 
-rm name	删除文件name
+    到达目录dir
 
-ll	查看文件及目录详情
+-   mkdir dir	
 
-cp [options] source dest	将source复制到dest，options是具体复制操作的选项
+    创建目录dir
 
-mv [options] source dest	将source移动到dest，options是具体移动操作的选项
+-   vim name 
 
-*.xxx	相当于对所有.xxx后缀的对象进行操作
+    打开文件name
 
-..	上级目录
+-   set nu 
 
-.	当前目录
+    显示行号（在文件内使用）
 
-env	显示当前用户的环境变量	
+-   touch name	
 
-export [-f/-n/-p] [name] = [val]	设置或显示环境变量name的值为val，可以新增、修改、删除环境变量。-f 代表[name]中为函数名称；-n 删除指定的变量（实际上并未删除，只是不输出到后续值令的执行环境中）；-p 列出所有shell赋予程序的环境变量。这种方式事实上不会真的修改，只是会改变当前终端的后续执行环境。
+    创建文件name
 
-$name	获取变量name或环境变量name的值
+-   rm name	
 
-pwd	（print work directory）用于显示工作目录，得到当前所在目录的绝对路径名称
+    删除文件name
 
-echo xxx	将xxx打印显示出来，xxx可以是变量
+-   ll	
 
-source filename	在当前bash环境下读取并执行filename中的命令（也可以使用 . filename ）
+    查看文件及目录详情
 
-cd ~	家目录
+-   cp [options] source dest	
+
+    将source复制到dest，options是具体复制操作的选项
+
+-   mv [options] source dest	
+
+    将source移动到dest，options是具体移动操作的选项
+
+-   *.xxx	
+
+    相当于对所有.xxx后缀的对象进行操作
+
+-   ..	
+
+    上级目录
+
+-   .	
+
+    当前目录
+
+-   env	
+
+    显示当前用户的环境变量	
+
+-   export [-f/-n/-p] [name] = [val]	
+
+    设置或显示环境变量name的值为val，可以新增、修改、删除环境变量。-f 代表[name]中为函数名称；-n 删除指定的变量（实际上并未删除，只是不输出到后续值令的执行环境中）；-p 列出所有shell赋予程序的环境变量。这种方式事实上不会真的修改，只是会改变当前终端的后续执行环境。
+
+-   $name	
+
+    获取变量name或环境变量name的值
+
+-   pwd	
+
+    （print work directory）用于显示工作目录，得到当前所在目录的绝对路径名称
+
+-   echo xxx	
+
+    将xxx打印显示出来，xxx可以是变量
+
+-   source filename	
+
+    在当前bash环境下读取并执行filename中的命令（也可以使用 . filename ）
+
+-   cd ~	
+
+    家目录
 
 ## 编辑操作
 
@@ -47,8 +93,6 @@ shift + g	下拉到最下面
 o	插入
 
 wq	保存并退出
-
-
 
 # GCC操作
 
@@ -536,4 +580,60 @@ gcc -g -Wall progam.c -o progam
     cmd：该函数内定义的一些命令宏
 
     …：可选参数
+
+# 进程
+
+
+
+## 显示进程
+
+-   ps aux / ajx
+
+    查看进程
+
+    a :  显示终端上的所有进程, 包括其他用户进程
+
+    u : 显示进程的详细信息
+
+    x : 显示没有控制终端的进程
+
+    j : 列出与作业控制相关的信息
+
+-   top
+
+    实时显示进程动态
+
+    -d 设置刷新间隔时间
+
+-   kill 
+
+    杀死进程
+
+    kill [-signal] pid	杀死进程
+
+    kill -l 列出所有信号
+
+    kill -9 / -SIGKILL  进程ID	强制杀死进程
+
+    killall name 根据进程名杀死进程
+
+## 显示进程
+
+-   pid_t getpid(void)
+
+    获取当前进程ID
+
+-   pid_t getppid(void)
+
+    获取当前进程的父进程ID
+
+## 进程创建
+
+-   pid_t fork(void)
+
+    创建当前子进程
+
+    返回值: 成功:子进程中返回0,父进程返回子进程ID;失败返回-1
+
+    失败原因:当前系统进程数达到上限(errno:EAGAIN);系统内存不足(errno:ENOMEM)
 

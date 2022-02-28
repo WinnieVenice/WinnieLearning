@@ -44,6 +44,8 @@ https://loj.ac/p/6053 MIN25筛
 
 https://www.cnblogs.com/onglublog/p/15489967.html 数位dp
 
+https://blog.csdn.net/jk211766/article/details/81474632
+
 CCPC长春
 
 ## 概率与期望

@@ -12,7 +12,76 @@ $$
 ### 做法1 dsu on tree
 
 ```c++
-
+#include <bits/stdc++.h>
+#define int long long
+#define endl '\n'
+#define LL __int128
+using namespace std;
+int qpow(int a, int b, int p) {int ret = 1; for(a %= p; b; b >>= 1, a = a * a % p) if(b & 1) ret = ret * a % p; return ret; }
+int qpow(int a,int b) {int ret = 1; for(; b; b >>= 1, a *= a) if(b & 1) ret *= a; return ret; }
+int gcd(int x,int y) {return y ? gcd(y, x % y) : x; }
+pair<int,int> exgcd(int a,int b) { if(!b) return {1, 0}; pair<int,int> ret = exgcd(b, a % b); return {ret.second, ret.first - a / b * ret.second }; }
+int lcm(int x,int y){ return x / gcd(x, y) * y; }
+const int N = 5 + 1e5;
+int n;
+int c[N];
+vector<int> G[N];
+int son[N], sz[N];
+void dfs0(int x, int f) {
+    sz[x] = 1; son[x] = 0;
+    for (auto v: G[x]) {
+        if (v != f) {
+            dfs0(v, x);
+            sz[x] += sz[v];
+            if (sz[son[x]] < sz[v]) son[x] = v;
+        }
+    }
+}
+map<int, int> mp;
+int mx, sum, Son;
+int ans[N];
+void add(int x, int f) {
+    mp[c[x]]++;
+    if (mx <= mp[c[x]]) {
+        if (mx < mp[c[x]]) {
+            mx = mp[c[x]]; sum = 0;
+        }
+        sum += c[x];
+    }
+    for (auto &v: G[x]) {
+        if (v != f && v != Son) add(v, x);
+    }
+}
+void dfs(int x, int f, int T, int hson) {
+    if (T) {
+        for (auto &v: G[x]) {
+            if (v != f && v != son[x]) dfs(v, x, 1, 0);
+        }
+    }
+    if (son[x] && son[x] != f) {
+        dfs(son[x], x, 1, 1);
+        Son = son[x];
+    }
+    add(x, f);
+    Son = 0;
+    if (T) ans[x] = sum;
+    if (T && !hson) mp.clear(), sum = 0, mx = 0;   
+}
+signed main() {
+    ios :: sync_with_stdio(false), cin.tie(0), cout.tie(0);
+    cin >> n;
+    for (int i = 1; i <= n; i++) { cin >> c[i]; }
+    for (int i = 1; i < n; i++) {
+        int u, v; cin >> u >> v;
+        G[u].push_back(v); G[v].push_back(u);
+    }    
+    dfs0(1, 0);
+    dfs(1, 0, 1, 1);
+    for (int i = 1; i <= n; i++) {
+        cout << ans[i] << ' ';
+    }
+    cout << endl;
+}
 ```
 
 ### 做法2 dfs序+分治

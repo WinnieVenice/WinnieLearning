@@ -505,6 +505,30 @@ gcc -g -Wall progam.c -o progam
 
     until（跳出循环）
 
+## 多进程调试
+
+gdb默认只能跟踪一个进程
+
+-   set follow-fork-mode [parent(默认) | child]
+
+    设置调试父进程或者子进程
+
+-   set detach-on-fork [on(默认) | off]
+
+    设置调试模式. on:表示调试当前进程时,其他进程继续运行; off: 其他进程被gdb挂起
+
+-   info inferiors
+
+    查看调试的进程
+
+-   inferiors id
+
+    切换当前调试的进程
+
+-   detach inferiors id
+
+    使进程脱离gdb调试
+
 # C函数
 
 ## 文件属性操作函数
@@ -581,6 +605,72 @@ gcc -g -Wall progam.c -o progam
 
     …：可选参数
 
+## exec函数族
+
+(函数族:一系列具有相同或类似功能的函数的统称)
+
+### 作用
+
+根据指定的文件名找到可执行文件,并用它来取代调用进程的内容.
+
+即:在调用进程内部执行一个可执行文件.
+
+exec函数执行成功后不会返回,因为调用进程的实体,包括代码段,数据段,堆栈都被新内容替代(用户数据区),只留下进程ID等一些表面信息保持原样.只有调用失败了,才会返回-1,从原程序的调用点接着往下执行.
+
+-   int execl(const char *path, const char *arg, …/\*(char \*) NULL\*/)
+
+    path:需要指定的执行的文件的路径或者名称
+
+    arg:是可执行文件所需要的参数列表
+
+    ​	第一个参数没什么作用,一般写可执行程序的名称
+
+    ​	第二个参数开始就是程序执行所需要的参数列表
+
+    ​	参数最后需要以NULL结束
+
+    返回值:
+
+    ​	只有调用失败才会返回-1,否则没有返回值
+
+-   int execlp(const char *file, const char *arg, …/\*(char *) NULL\*/)
+
+    [会到环境变量中查找指定的可执行文件,如果找到了就执行,找不到就执行不成功]
+
+    path:需要指定的执行的文件的文件名
+
+    arg:是可执行文件所需要的参数列表
+
+    ​	第一个参数没什么作用,一般写可执行程序的名称
+
+    ​	第二个参数开始就是程序执行所需要的参数列表
+
+    ​	参数最后需要以NULL结束
+
+    返回值:
+
+    ​	只有调用失败才会返回-1,否则没有返回值
+
+-   int execle(const char *path, const char *arg,…/\*(char *) NULL, char *const envp[]\*/)
+
+-   int execv(const char *path, char *const argv[])
+
+-   int execvp(const char *file, char *const argv[])
+
+-   int execvpe(const char *file, char *const argv[], char *const envp[])
+
+-   int execve(const char *filename, char *const argv[], char *const enp[])
+
+    前6个是标准C库的,最后一个是Linux的
+
+    l(list)	参数地址列表,以空指针结尾
+
+    v(vector)	存有各参数地址的指针数组的地址
+
+    p(path)	按PATH环境变量指定的目录搜索可执行文件
+
+    e(environment)	存有环境变量字符串地址的指针数组的地址
+
 # 进程
 
 
@@ -636,4 +726,38 @@ gcc -g -Wall progam.c -o progam
     返回值: 成功:子进程中返回0,父进程返回子进程ID;失败返回-1
 
     失败原因:当前系统进程数达到上限(errno:EAGAIN);系统内存不足(errno:ENOMEM)
+    
+    通过fork()复制当前进程创建出的子进程除了pid不同外,(虚拟地址的)用户区数据和内核区都一样,具体来说(fork是写时拷贝):一开始fork完,用户区资源是共享的(共享同一个空间地址),内核区还是要独立的,但是部分内核区数据一样,只要是只读状态那么用户区资源都是共享的,只有在写入修改的情况下才会开始复制数据(分配新的内存)
+    
+-   父子进程的区别
+
+    1.fork()的函数返回值不同
+
+    ​	父进程中:>0 返回的子进程ID
+
+    ​	子进程中:=0
+
+    2.pcb中的一些数据不同
+
+    ​	当前进程ID pid
+
+    ​	当前进程的父进程ID pid
+
+    ​	信号集
+
+-   父子进程的共同点
+
+    某些状态下:子进程刚被创建出来,还没执行任何写数据的操作
+
+    ​	用户区数据一样
+
+    ​	文件描述符表一样
+
+    父子进程对变量的共享情况:
+
+    ​	刚开始时,是一样的,共享的.如果修改了数据,不共享了
+
+    ​	(读时共享(没有进行任何写的操作),写时拷贝)
+
+    
 

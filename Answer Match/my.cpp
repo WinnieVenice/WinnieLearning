@@ -1,111 +1,65 @@
 #include<bits/stdc++.h>
-//#define wwj
-struct trie {
-    void ins(std::string &s, int v) {
-        int cur = rt;
-        for (int i = s.size() - 1; i >= 0; i--) {
-            int c = _ch(s[i]);
-            if (!ch[c][cur]) ch[c][cur] = ++tot;
-            cur = ch[c][cur];
-        }
-        val[cur] = v;
-    }
-    int find(std::string &s) {
-        int cur = rt;
-        for (int i = s.size() - 1; i >= 0; i--) {
-            int c = _ch(s[i]);
-            if (!ch[c][cur]) return 0;
-            cur = ch[c][cur];
-        }
-        return cur;
-    }
-    int _ch(char c) { return c - 'a'; }
-    trie(int _n, int _m): n(_n), m(_m) {
-        ch.resize(m, std::vector<int>(n, 0));
-        rt = tot = 0;
-        val.resize(n);
-    }
-    int rt, n, m, tot;
-    std::vector<std::vector<int>> ch;
-    std::vector<int> val;
-};
+#define int long long 
+using namespace std;
 signed main() {
     //std::ios::sync_with_stdio(false),std::cin.tie(0),std::cout.tie(0);
-    #ifdef wwj
-        std::ifstream cin("E:\\workworkwork\\GitHub\\demo\\test.in");
-        std::ofstream cout("E:\\workworkwork\\GitHub\\demo\\test.out");
-    #endif
-    int n; std::cin >> n;
-    #ifdef wwj
-        cin >> n;
-    #endif
-    std::vector<std::pair<std::string, int>> a(n);
-    int sum_len = 0;
-    for (auto &v: a) {
-        std::cin >> v.first;
-        #ifdef wwj
-            cin >> v.first;
-        #endif
-        sum_len += (int)v.first.size();
-    } 
-    int mx_col = 0;
-    for (auto &v: a) {
-        std::cin >> v.second;
-        #ifdef wwj
-            cin >> v.second;
-        #endif
-        mx_col = std::max(mx_col, v.second);
+    std::ifstream cin("C:\\Users\\WinnieVenice\\Documents\\GitHub\\WinnieLearning\\Answer Match\\data.in");
+    std::ofstream cout("C:\\Users\\WinnieVenice\\Documents\\GitHub\\WinnieLearning\\Answer Match\\my.out");
+    int n; cin >> n;
+    std::vector<int> pos_x;
+    std::vector<std::tuple<int, int, int, int>> line;
+    for (int i = 0; i < n; i++) {
+        int x1, y1, x2, y2; cin >> x1 >> y1 >> x2 >> y2;
+        pos_x.push_back(x1); pos_x.push_back(x2);
+        line.push_back({x1, x2, y1, 1});
+        line.push_back({x1, x2, y2, -1});
     }
-    trie tr(sum_len + 1, 26);
-    for (auto &v: a) {
-        tr.ins(v.first, v.second);
+    std::sort(pos_x.begin(), pos_x.end());
+    int m = std::unique(pos_x.begin(), pos_x.end()) - pos_x.begin();
+    std::map<int, int> inv;
+    for (int i = 0; i < m; i++) {
+        inv[pos_x[i]] = i;
     }
-    int tot = 0;
-    std::vector<int> sz(tr.tot + 1 + 1);
-    std::vector<int> idx(tr.tot + 1 + 1);
-    std::function<int(int)> dfs = [&](int x) {
-        idx[++tot] = x; sz[x] = 1;
-        for (int i = 0; i < 26; i++) {
-            if (!tr.ch[i][x]) continue;
-            sz[x] += dfs(tr.ch[i][x]);
+    std::sort(line.begin(), line.end(), [&](auto x, auto y) {
+        return std::get<2>(x) < std::get<2>(y);
+    });
+    std::vector<int> cnt((m + 1) << 2, 0), len((m + 1) << 2, 0);
+    auto poll = [&](int x, int l, int r) {
+        //cout << "poll:" << x << ' ' << l << ' ' << r << ' ' << ((m + 1) << 2) << '\n';
+        if (cnt[x]) {
+            len[x] = pos_x[r + 1] - pos_x[l];
+        } else if (l < r) {
+            len[x] = len[x << 1] + len[x << 1| 1];
         }
-        return sz[x];
     };
-    dfs(tr.rt);
-    std::vector<int> ans(tr.tot + 1 + 1, 0);
-    int mx = 0;
-    std::vector<int> mp(mx_col + 1, 0);
-    auto add = [&](int x) {
-        mx = std::max(mx, ++mp[tr.val[idx[x]]]);
-    };
-    auto del = [&](int x) {
-        mp[tr.val[idx[x]]]--;
-    };
-    std::function<void(int, int)> sol = [&](int l, int r) {
-        if (l == r) {
-            ans[idx[l]] = 1;
+    std::function<void(int, int, int, int, int, int)> upd = [&](int x, int l, int r, int L, int R, int v) {
+        //cout << "upd:" << x << ' ' << l <<   ' ' << r << ' ' << L << ' ' << R << '\n';
+        if (pos_x[l] > pos_x[R] || pos_x[r] < pos_x[L]) return;
+        if (pos_x[L] <= pos_x[l] && pos_x[r] <= pos_x[R]) {
+            cnt[x] += v;
+            poll(x, l, r);
+        //cout << "---" << '\n';
             return;
         }
         int mid = l + r >> 1;
-        sol(l, mid); sol(mid + 1, r);
-        mx = 0;
-        for (int i = mid, j, p = mid; l <= i && (j = i + sz[idx[i]] - 1) <= r; i--) {
-            add(i);
-            if (j <= mid) continue;
-            for (; p < j; ) add(++p);
-            ans[idx[i]] = std::max(ans[idx[i]], mx);
-        }
-        for (int i = mid, j, p = mid; l <= i && (j = i + sz[idx[i]] - 1) <= r; i--) {
-            del(i);
-            if (j <= mid) continue;
-            for (; p < j; ) del(++p);
-        }
+        upd(x << 1, l, mid, L, R, v); upd(x << 1| 1, mid + 1, r, L, R, v);
+        poll(x, l, r);
     };
-    sol(1, tot);
-    for (auto &v: a) {
-        std::cout << ans[tr.find(v.first)] << '\n';
-        #ifdef wwj
-            cout << ans[tr.find(v.first)] << '\n';
-        #endif
+    int ans = 0;
+    for (int i = 0, sz = n << 1; i < sz - 1; ++i) {
+        cout << i << ' ' << std::get<0>(line[i]) << ' ' << std::get<1>(line[i]) << ' ' << std::get<3>(line[i]) << '\n';
+        upd(1, 0, m - 1, inv[std::get<0>(line[i])], inv[std::get<1>(line[i])] - 1, std::get<3>(line[i]));
+        cout << len[1] << ' ' << get<2>(line[i + 1]) - get<2>(line[i]) << '\n';
+        ans += (std::get<2>(line[i + 1]) - std::get<2>(line[i])) * len[1];
     }
+    std::cout << ans << '\n';
 }
+/*
+2
+100 100 200 200
+150 150 250 255
+
+(200 - 100) * (150 - 100) = 5000
+(250 - 100) * (200 - 150) = 7500
+(250 - 150) * (255 - 200) = 5500
+*/

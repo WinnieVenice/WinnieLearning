@@ -39,6 +39,7 @@ signed main() {
         if (x != y) {
             del(x); del(y);
             sz[x] += sz[y];
+            a[x] |= a[y];
             fa[y] = x;
             for (int t = 0; t < 3; t++) {
                 if (!t || (a[x] & (1 << t))) {
@@ -52,14 +53,14 @@ signed main() {
         for (int j = 0, SZ = s[0].size(); j < SZ; j++) {
             int u = s[0][j].second;
             if (a[u] & (1 << 0)) {
-                if (id == -1 || sz[id] < sz[u]) {
-                    id = u;
+                if (id == -1 || sz[s[0][id].second] < sz[u]) {
+                    id = j;
                 }
             }
         }
         if (id != -1) {
             swap(s[0][0], s[0][id]);
-            sort(s[0].begin(), s[0].end(), [&](auto x, auto y) {
+            sort(s[0].begin() + 1, s[0].end(), [&](auto x, auto y) {
                 return x.first > y.first;
             });
             ans[0] = 0;

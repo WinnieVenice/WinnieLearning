@@ -1,8 +1,8 @@
 #include<bits/stdc++.h>
 #define int long long
 using namespace std;
-#define wwj
-const int M = 5 + 1e5;
+//#define wwj
+const int M = 5 + 2e6;
 int st[M << 2], tag[M << 2];
 void push(int x, int l, int r) {
     if (tag[x]) {

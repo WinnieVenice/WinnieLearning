@@ -219,3 +219,7 @@ https://codeforces.com/gym/103119/problem/A
 ## 异或最小生成树
 
 https://codeforces.com/gym/103119/problem/Chttps://codeforces.com/contest/1615/problem/E
+
+## 动态最小生成树
+
+https://www.luogu.com.cn/problem/P4172

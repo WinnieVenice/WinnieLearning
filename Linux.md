@@ -2073,6 +2073,32 @@ FIFO和PIPE有一些特点是相同的，不同的地方在于：
 
 ![image-20220317013854021](https://raw.githubusercontent.com/WinnieVenice/PicBed/main/202203170138101.png)
 
+## 字节序
+### 简介
+>现代CPU的累加器一次都能装载(至少)4字节(对于32位机),即一个整数.那么这4字节在内存中排列的顺序将影响它被累加器装载成整数的值,这就是字节序问题.在克重计算机可惜结构中,对于字节/字等的存储机制有所不同,因而引发了计算机通信领域中一个很重要的问题,即通信双方交流的信息单元(比特/字节/字/双字等)应该以什么样的顺序进行传哦是那个.如果不达成一致的规则,通信双方将无法进行正常的编码/译码从而导致通信失败
+>
+>**字节序,顾名思义字节的顺序,就是大于一个字节类型的数据在内存中存放顺序**
+>字节序分为大端字节序(Big-Endian)和小端字节序(Little-Endian).大端字节序是指一个整数的最高位字节(23~31 bit)存储在内存的低地址处,低位字节(0~7 bit)存储在内存的高地址处;小端字节序则是指整数的高位字节存储在内存的高地址处,而低位字节则存储在内存的低地址处
+>
+### 字节序转换函数
+>当格式化的数据在两台使用不同字节序的主机之间直接传递时,接收端必然错误的解释之.解决问题的方法时:发送端总是把要发送的数据转换成大端字节序数据后再发送,而接收端知道对方传输过来的数据总是采用大端字节序,所以接收端可以根据自身采用的字节序决定是否对接收到的数据进行转换(小端机转换,大端机不转换)
+>**网络字节顺序**时TCP / IP 中规定好的一种数据表示格式,它与具体的CPU类型/操作系统等无关,从而可以保证数据在不同主机之间传输时能够被正确解释,网络字节顺序采用大端排序方式
+>BSD Socket提供了封装好的转换接口,方便程序员使用.包括从主机字节序到网络字节序的转换函数:htons/htonl;从网络字节序到主机字节序的转换函数:ntohs/ntohl
+>h - host 主机,主机字节序
+>to - 转换成什么
+>n - network 网络字节序
+>s - unsigned short
+>l - unsigned long
+>
+- uint16_t htons(uint16_t hostshort)
+    	- 转换端口,主机字节序到网络字节序
+- uint16_t ntohs(uint16_t netshort)
+    	- 转换端口,网络字节序到主机字节序
+- uint32_t htonl(uint32_t hostlong)
+    	- 转换IP,主机字节序到网络字节序
+- uint32_t ntohl(uint32_t netlong)
+    	- 转换IP,网络字节序到主机字节序
+
 ## Socket（套接字）
 
 >所谓socket（套接字），就是对网络中不同主机上的应用进程之间进行双向通信的端点的抽象。一个套接字就是网络上进程通信的一段，提供了应用层进程利用网络协议交换数据的机制。从所处的地位来讲，套接字上联应用进程，下联网络协议栈，是应用程序通过网络协议进行通信的接口，是应用程序与网络协议根进行交互的接口
@@ -2085,3 +2111,93 @@ FIFO和PIPE有一些特点是相同的，不同的地方在于：
     -   服务端：被动接受连接，一般不会主动发起连接
     -   客户端：主动向服务器发起连接
 -   socket是一套通信的接口，Linux和Windows都有，但是有一些细微的差别
+## socket地址
+### 通用socket地址
+**socket网络变成接口中表示socket地址的时结构体sockaddr**
+
+```C++
+	struct sockaddr {
+		sa_family_t sa_family;
+		char 	sa_data[14];
+	};
+	typedef unsigned short int sa_family_t;
+```
+
+**sa_family成员是地址族类型(sa_family_t)的变量.**地址族类型通常与协议族类型对应.常见的协议族(domain)和对应的地址族:
+- PF_UNIX	AF_UNIX	UNIX本地域协议族
+- PF_INET	AF_INET	TCP/IPv4协议族
+- PF_INET6	AF_INET6	TCP/IPv6协议族
+
+宏PF_*和AF_*具有完全相同的值,可以混用
+**sa_data成员用于存放socket地址值.**但是不同的协议族的地址值具有不同的含义和长度:
+- PF_UNIX	文件的路径名,长度可达108字节
+- PF_INET	16bit端口号和32bit IPv4地址,共6字节
+- PF_INET6	16bit端口号,32bit流标识,128bit IPv6地址,32bit范围ID,共26字节
+
+由于旧的sa_data无法存储IPv6,所以推出了新的通用socket地址结构体,**这个结构体不仅提供了足够大的空间用于存放地址值,而且是内存对齐的**
+```C++
+	struct sockaddr_storage{
+		sa_family_t sa_family;
+		unsigned long int __ss_align;
+		char __ss_padding[128 - sizeof(__ss_align)];
+	};
+	typedef unsigned short int sa_family_t;
+```
+### 专用socket地址
+> 很多网络编程函数诞生早于IPv4协议,那时候都使用的是struct sockaddr结构体,为了向前兼容,现在sockaddr 退化成了(void *)的作用,传递一个地址给函数,至于这个函数是sockaddr_in还是sockaddr_in6,由地址族确定,然后函数内部再强制类型转化为所需的地址类型
+
+![image-20220317102847485](https://raw.githubusercontent.com/WinnieVenice/PicBed/main/202203171028908.png)
+
+```C++
+struct sockaddr_in{
+    sa_family_t sin_family;	/* 协议*/
+    in_port_t sin_port;	/* 端口 */
+    struct in_addr sin_addr;	/* 网络IP地址 */
+    unsigned char sin_zero[sizeof(struct sockaddr) - __SOCKADDR_COMMON_SIZE - sizeof(in_port_t) - sizeof(struct in_addr)];
+};
+
+struct in_addr {
+    in_addr_t s_addr;
+};
+
+struct sockaddr_in6 {
+    sa_family_t sin6_family;
+    in_port_t sin6_port;	/* 端口 */
+    uint32_t sin6_flowinfo;		/* IPv6流信息 */
+    struct in6_addr sin6_addr; 	/* IPv6地址 */
+    uint32_t sin6_scope_id;		/* IPv6 scope-id */
+};
+
+typedef unsigned short uint16_t;
+typedef unsigned int uint32_t;
+typedef uint16_t in_port_t;
+typedef uint32_t in_addr_t;
+#define __SOCKADDR_COMMON_SIZE (sizeof(unsigned short int))
+```
+
+**所有专用socket地址(以及sockaddr storage)类型的变量在实际使用时都需要转化为通用socket地址类型sockaddr(强制转换即可),因为所有socket编程接口使用的地址参数类型都是sockaddr**
+
+## IP地址转换(字符串ip-整数)
+
+>   通常,人们习惯用可读性号的字符串来表示IP地址,比如用点分十进制字符串表示IPv4地址,以及用十六进制字符串表示IPv6地址.但编程中我们需要先把它们把转化成整数(二进制数)方能使用.而记录日志时则相反,我们要把整数表示的IP地址转化成可读的字符串.
+
+-   int inet_pton(int af, const char *src, void *dst)
+    -   功能:将点分十进制的IP字符串转化成网络字节序的整数
+    -   参数:
+        -   af:地址族
+            -   AF_INET: IPv4
+            -   AF_INET6: IPv6
+        -   src:需要转换的点分十进制字符串的IP字符串
+        -   dst:传出参数,转换后的结果
+-   const char *inet_ntop(int af, const void *src, char *dst, socklen_t size)
+    -   功能:将网络字节序的整数转化成点分十进制的IP字符串
+    -   参数:
+        -   af:地址族
+            -   AF_INET: IPv4
+            -   AF_INET6: IPv6
+        -   src: 要转换的ip的整数的地址
+        -   dst: 传出参数
+        -    size: 第三个参数的大小(数组的大小)
+    -   返回值:返回转化后的数据的地址(字符串),和dst时一样的
+
+p: 点分十进制的IP字符串; n:表示network,网络字节序的整数

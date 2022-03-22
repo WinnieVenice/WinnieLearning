@@ -1,9 +1,9 @@
 
 //带vis
-vector<long long> dijstra(vector<pair<int,long long>> *E,int n,int s){
-    vector<long long> dis(n+1,LONG_LONG_MAX);
-    vector<bool> vis(n+1,0);
-    priority_queue<pair<long long,int>,vector<pair<long long,int>>,greater<pair<long long,int>>> q;
+std::vector<long long> dijstra(std::vector<std::pair<int,long long>> *E,int n,int s){
+    std::vector<long long> dis(n+1,LONG_LONG_MAX);
+    std::vector<bool> vis(n+1,0);
+    std::priority_queue<std::pair<long long,int>, std::vector<std::pair<long long,int>>, std::greater<std::pair<long long,int>>> q;
     q.push({dis[s]=0,s});
     while(q.size()){
         int x=q.top().second; q.pop();

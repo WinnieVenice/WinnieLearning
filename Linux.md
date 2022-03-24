@@ -2487,15 +2487,360 @@ p: 点分十进制的IP字符串; n:表示network,网络字节序的整数
 
     需要占用更多的CPU和系统资源
 
+每循环内O(n)系统调用
+
 ### 使用IO多路转接技术（select / poll / epoll）
 
+>select / poll ：委托内核通知有多少个I / O
+>
+>epoll：委托内核通知有多少个I / O 和他们分别是哪几个
 
+### select
 
+>**主旨思想：**
+>
+>1.   首先要构造一个关于文件描述符的列表，将要监听的文件描述符添加到该列表中
+>2.   调用一个系统函数，监听该列表中的文件描述符，直到这些描述符中的一个或者多个进行I / O操作时，该函数才返回
+>     -   这个函数是阻塞的
+>     -   该函数对文件描述符的检测的操作是由内核完成的
+>3.   在返回时，它会告诉进程有多少（哪些）描述符要进行I / O 操作
+>
+>**缺点：**
+>
+>1.   每次调用select，都需要把fd集合从用户态拷贝到内核态，这个开销在fd很多时会很大
+>2.   同时每次调用select都需要在内核遍历传递进来的所有fd，这个开销在fd很多时也很大
+>3.   select支持的文件描述符数量很小，默认是1024
+>4.   fds集合不能重用，每次都需要重置
 
+-   int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)
 
+    -   参数：
 
+        -   nfds： 委托内核检测的最大文件描述符的值+1（右开区间所以+1）
 
+        -   readfds：要检测的文件描述符的读的集合，委托内核检测哪些文件描述符的读的属性
 
+            ​	一般检测读操作
+
+            ​	对应的对方发送过来的数据，因为读是被动的接受数据，检测的就是读缓冲区
+
+            ​	是一个传入传出参数
+
+        -   writefds：要检测的文件描述符的写的集合，委托内核检测哪些文件描述符的写的属性
+
+            ​	委托内核检测写缓冲区是不是还可以写数据（不满的就可以写）
+
+        -   exceptfds：检测发生异常的文件描述符的集合
+
+        -   timeout：设置的超时时间
+
+            ​	NULL：永久阻塞，直到检测到了文件描述符有变化
+
+            ​	tv_sec = 0， tv_usec = 0，不阻塞
+
+            ​	tv_sec > 0，tv_usec > 0，阻塞对应的时间
+
+    -   返回值：
+
+        -   -1：失败
+        -   \> 0(n)：表示的集合中有n个文件描述符发生了变化
+
+-   void FD_CLR(int fd, fd_set *set)
+
+    -   功能：将参数文件描述符fd对应的标志位设置为0
+
+-   int FD_ISSET(int fd, fd_set *set)
+
+    -   功能：判断fd对应的标志位是0还是1
+    -   返回值：fd对应的标志位的值；0，返回0；1，返回1
+
+-   void FD_SET(int fd, fd_set *set)
+
+    -   功能：将参数文件描述符fd对应的标志位，设置为1
+
+-   void FD_ZERO(fd_set *set)
+
+    -   功能：fd_set一共有1024 bit，全部初始化为0
+
+### poll
+
+-   **缺点：**
+
+    1.   每次调用poll，都需要把fd集合从用户态拷贝到内核态，这个开销在fd很多的时候会很大
+    2.   同时每次调用poll都需要在内核遍历传进来的所有的fd，这个开销在fd很多的时候也很大
+
+-   int poll(struct pollfd *fds, nfds_t nfds, int timeout)
+
+    ```C++
+    struct pollfd {
+        int fd;	//	委托内核检测的文件描述符
+        short events; //	委托内核检测的文件描述符的什么事件
+        short revents;	//	文件描述符实际发生的事情
+    }
+    ```
+
+    
+
+    -   参数：
+
+        -   fds：这是一个需要检测的文件描述符的集合（数组）
+
+        -   nfds：第一个参数数组中最后一个有效元素的下标+1
+
+        -   timeout：阻塞时长
+
+            ​	0：不阻塞
+
+            ​	-1：阻塞，检测到需要检测的文件描述符有变化，解除阻塞
+
+            ​	>0：阻塞的时长
+
+    -   返回值：
+
+        -   -1：失败
+        -   \> 0(n)：成功，n表示检测到集合中有n个文件描述符发生变化
+
+### epoll
+
+-   int epoll_create(int size)
+
+    -   功能：创建一个新的epoll实例。在内核中创建了一个数据，这个数据中有两个比较重要的数据，一个是需要检测的文件描述符的信息（红黑树），还有一个就是就绪列表，存放检测到数据发送改变的文件描述符信息（双向链表）
+    -   参数：
+        -   size：2.6之后没有意义，以前是hash。随便写一个非0的数
+    -   返回值：
+        -   -1：失败
+        -   \> 0：文件描述符，操作epoll实例的
+
+-   int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)
+
+    -   功能：对epoll实例进行管理：添加文件描述符信息，删除信息，修改信息
+
+    -   参数：
+
+        -   epfd：epoll实例对应的文件描述符
+
+        -   op：要进行什么操作
+
+            ​	EPOLL_CTL_ADD：添加
+
+            ​	EPOLL_CTL_MOD：修改
+
+            ​	EPOLL_CTL_DEL：删除
+
+        -   fd：要检测的文件描述符
+
+        -   event：检测文件描述符什么事情
+
+            ​	常见epoll检测事件： 
+
+            ​		EPOLLIN
+
+            ​		EPOLLOUT
+
+            ​		EPOLLERR
+
+            ​		EPOLLET（ET模式边沿触发）
+
+-   int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
+
+    -   功能：检测函数
+
+    -   参数：
+
+        -   epfd：epoll实例对应的文件描述符
+
+        -   events：传出参数，保存了发送了变化的文件描述符的信息
+
+        -   maxevents：第二个参数结构体数组的大小
+
+        -   timeout：阻塞时间
+
+            ​	0：不阻塞
+
+            ​	-1：阻塞，直到检测到fd数据发生变化，解除阻塞
+
+            ​	\>0：阻塞的时长（毫秒）
+
+    -   返回值：
+
+        -   成功，返回发送变化的文件描述符的个数 \> 0
+        -   失败：-1
+
+### epoll的两种工作模式：
+
+-   LT模式(水平触发)
+
+    >   LT是缺省（默认）的工作方式，并且同时支持block和no-block socket。在这种做法中，内核告诉你一个文件描述符是否就绪了，然后你可以对这个就绪的fd进行IO操作。如果你不作任何操作，内核还是会继续通知你的。
+
+    假设委托内核检测读事件 -> 检测fd的读缓冲区
+
+    ​	读缓冲区有数据 -> epoll检测到了会给用户通知
+
+      		1. 用户不读数据，数据一直在缓冲区，epoll会一直通知
+      		2. 用户只读了一部分数据，epoll会通知
+      		3. 缓冲区的数据读完了，不通知
+
+-   ET模式（边沿触发）
+
+    >   ET是高速工作方式，支持no-block socket。在这种模式下，当描述符从未就绪变为就绪时，内核通过epoll告诉你。然后它会假设你知道文件描述符已经就绪，并且不会再为那个文件描述符发送更多的就绪通知，直到你做了某些操作导致那个文件描述符不再为就绪状态了。但是请注意，如果一直不对这个fd作IO操作（从而导致它再次变成未就绪），内核不会发送更多的通知（only once）
+    >
+    >   ET模式在很大程度上减少了epoll事件被重复触发的次数，因此效率要比LT模式高。epoll工作在ET模式的时候，必须使用非阻塞套接口，以避免由于一个文件句柄的阻塞读 / 阻塞写操作把处理多个文件描述符的任务饿死
+
+    假设委托内核检测读事件 -> 检测fd的读缓冲区
+
+    ​	读缓冲区有数据 -> epoll检测到了会给用户通知
+
+    	1. 用户不读数据，数据一直在缓冲区中，epoll下次检测的时候就不通知了
+    	2. 用户只读了一部分数据，epoll不通知
+    	3. 缓冲区的数据读完了，不通知
+
+## UDP
+
+![image-20220323143016481](https://raw.githubusercontent.com/WinnieVenice/PicBed/main/202203231431631.png)
+
+-   ssize_t sento(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen)
+    -   参数：
+        -   sockfd：通信的fd
+        -   buf：要发送的数据
+        -   len：发送数据的长度
+        -   flags：一般用0
+        -   dest_addr：通信的另外一端的地址信息
+        -   addrlen：地址的内存大小
+-   ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen)
+    -   参数：
+        -   sockfd：通信的fd
+        -   buf：接受数据的数组
+        -   len：数组的大小
+        -   flags：一般为0
+        -   src_addr：用来保存另一端的地址信息，不需要可以为NULL
+        -   addrlen：地址的内存大小
+
+## 广播
+
+>   向子网中多台计算机发送消息，并且子网中所有的计算机都可以接受到发送方发送的消息，每个广播消息都包含一个特殊的IP地址，这个IP中子网内主机标志部分的二进制全部为1
+>
+>   1.   只能在局域网中使用
+>   2.   客户端需要绑定服务器广播使用的端口，才可以接受到广播消息
+
+-   int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen)
+    -   功能：设置广播属性
+    -   参数：
+        -   sockfd：文件描述符
+        -   level：SOL_SOCKET
+        -   optname：SO_BROADCAST
+        -   optval：int类型的值，为1表示允许广播
+        -   optlen：optval的大小
+
+## 组播（多播）
+
+>   单薄地址表示单个IP接口，广播地址标识某个子网的所有IP接口，多播地址标识一组IP接口。单播和广播是寻址方案的两个极端，多播则意在两者之间提供一种这种方案。多播数据报只应该由对它感兴趣的接口接收，也就是说由运行相应多播会话应用系统的主机上的接口接受。另外，广播一般局限于局域网内使用，而多播则既可以用于局域网也可以跨广域网使用
+>
+>   1.   组播既可以用于局域网，也可以用于广域网
+>   2.   客户端需要加入多播组，才能接受到多播的数据
+
+-   用setsockopt实现，
+    -   服务端设置多播信息，外出接口
+        -   level：IPPROTO_IP
+        -   optname：IP_MULTICAST_IF
+        -   optval：struct in_addr
+    -   客户端加入到多播组
+        -   level：IPPROTO_IP
+        -   optname：IP_ADD_MEMBERSHIP
+        -   optval：struct mreq
+
+## 本地套接字
+
+>   -   **作用**：本地的进程间通信
+>
+>       ​	有关系的进程间的通信
+>
+>       ​	没有关系的进程间的通信
+>
+>       本地套接字实现流程和网络套接字类似，一般采用TCP的通信流程
+>
+>   -   流程：
+>
+>       **要用unlink删除掉客户端和服务端产生的用于通信的伪文件**
+>
+>       -   服务端：
+>
+>           1.   创建监听的套接字
+>
+>                int lfd = socket(AF_UNIX / PF_LOCAL, SOCK_STREAM, 0)
+>
+>           2.   监听的套接字绑定本地的套接字文件 -> server端
+>
+>                struct sockaddr_un addr
+>
+>                **//绑定成功后，指定的sun_path中的套接字文件会自动生成**
+>
+>                bind(lfd, addr, len)
+>
+>           3.   监听
+>
+>                listen(lfd, 100)
+>
+>           4.   等待并接受连接请求
+>
+>                struct sockaddr_un cliaddr
+>
+>                int cfd = accept(lfd, &cliaddr, len)
+>
+>           5.   通信
+>
+>                ​	接受数据：read / recv
+>
+>                ​	发送数据：write / send
+>
+>           6.   关闭连接
+>
+>                close()
+>
+>       -   客户端：
+>
+>           1.   创建通信的套接字
+>
+>                int fd = socket(AF_UNIX / AF_LOCAL, SOCK_STREAM, 0)
+>
+>           2.   监听的套接字绑定本地的IP和端口
+>
+>                struct sockaddr_un addr
+>
+>                **//绑定成功后，指定的sun_path中的套接字文件会自动生成**
+>
+>                bind(lfd, addr, len)
+>
+>           3.   连接服务器
+>
+>                struct sockaddr_un serveraddr
+>
+>                connect(fd, &serveraddr, sizeof(serveraddr))
+>
+>           4.   通信
+>
+>                ​	接受数据：read / recv
+>
+>                ​	发送数据：write / send
+>
+>           5.   关闭连接
+>
+>                close()
+
+![image-20220323212332204](https://raw.githubusercontent.com/WinnieVenice/PicBed/main/202203232123278.png)
+
+# 阻塞 / 非阻塞、同步 / 异步（网络IO）
+
+>   典型的一次IO的两个阶段：数据就绪和数据读写
+>
+>   数据就绪：根据系统IO操作的就绪状态
+>
+>   -   阻塞
+>   -   非阻塞
+>
+>   数据读写：根据应用程序和内核的交互方式
+>
+>   -   同步
+>   -   异步
 
 # Unix/Linux上的五种IO模型
 

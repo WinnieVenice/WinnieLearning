@@ -223,3 +223,7 @@ https://codeforces.com/gym/103119/problem/Chttps://codeforces.com/contest/1615/p
 ## 动态最小生成树
 
 https://www.luogu.com.cn/problem/P4172
+
+## 线性筛
+
+[BZOJ2813]奇妙的Fibonacci（线性筛）

@@ -24,3 +24,4 @@ $ \sum_{i=l}^{r}\sum_{j=i}^{r} \min(a_i, a_{i+1}, \cdots, a_j)\cdot{\max(a_i, a_
 TL: 2s(?), ML: ?
 $$ 1 \leq n \leq 5\cdot{10^{5}}, 0 \leq a_i < 998244353 $$
 $$ 1 \leq q \leq 5\cdot{10^{5}}, 1 \leq l \leq r \leq n $$
+
